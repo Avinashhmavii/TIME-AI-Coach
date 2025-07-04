@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { getQuestions, getResumeAnalysis, saveInterviewSummary, type InterviewData } from "@/lib/data-store";
 import { interviewAgent, type InterviewAgentOutput } from "@/ai/flows/interview-agent";
+import { generateIceBreakerQuestion } from "@/ai/flows/ice-breaker-generator";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "./ui/button";
@@ -40,7 +41,7 @@ export function InterviewSession() {
   
   // Data for the AI agent
   const [language, setLanguage] = useState("en-US");
-  const [languageName, setLanguageName] = useState("English");
+  const [languageName, setLanguageName] = useState("");
   const [jobRole, setJobRole] = useState("");
   const [company, setCompany] = useState("");
   const [resumeText, setResumeText] = useState("");
@@ -50,54 +51,10 @@ export function InterviewSession() {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const initialQuestionGenerated = useRef(false);
 
-  // Get camera permission
   useEffect(() => {
-    const getCameraPermission = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        setHasCameraPermission(true);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error('Error accessing camera:', error);
-        setHasCameraPermission(false);
-        toast({
-          variant: 'destructive',
-          title: 'Camera Access Denied',
-          description: 'Please enable camera permissions in your browser settings to use video analysis.',
-        });
-      }
-    };
-
-    getCameraPermission();
-  }, [toast]);
-
-  // Load initial data and set up speech recognition
-  useEffect(() => {
-    const storedQuestionsData = getQuestions();
-    const storedResumeAnalysis = getResumeAnalysis();
-
-    if (storedQuestionsData && storedResumeAnalysis) {
-      setCurrentQuestion("Tell me about yourself."); // Start with a generic opening question
-      setLanguage(getLanguageCode(storedQuestionsData.language));
-      setLanguageName(storedQuestionsData.language);
-      setJobRole(storedQuestionsData.jobRole);
-      setCompany(storedQuestionsData.company);
-      setResumeText(`${storedResumeAnalysis.skills.join(', ')}\n\n${storedResumeAnalysis.experienceSummary}`);
-      setIsLoading(false);
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Missing Preparation Data",
-        description: "Please go to the prepare page to set up your interview first.",
-      });
-      router.push("/prepare");
-      return;
-    }
-
+    // 1. Setup Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
@@ -122,11 +79,98 @@ export function InterviewSession() {
         toast({variant: 'destructive', title: 'Browser Not Supported', description: 'Speech recognition is not supported in this browser.'});
     }
 
-  }, [router, toast]);
+    const captureVideoFrame = (): string | undefined => {
+      if (!hasCameraPermission || !videoRef.current || !canvasRef.current) {
+          return undefined;
+      }
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          return canvas.toDataURL('image/jpeg');
+      }
+      return undefined;
+    }
+
+    // 2. Setup Interview async
+    const setupInterview = async () => {
+        const storedQuestionsData = getQuestions();
+        const storedResumeAnalysis = getResumeAnalysis();
+        if (!storedQuestionsData || !storedResumeAnalysis) {
+            toast({ variant: "destructive", title: "Missing Preparation Data", description: "Please go to the prepare page first." });
+            router.push("/prepare");
+            return;
+        }
+
+        const langName = storedQuestionsData.language;
+        setLanguage(getLanguageCode(langName));
+        setLanguageName(langName);
+        setJobRole(storedQuestionsData.jobRole);
+        setCompany(storedQuestionsData.company);
+        setResumeText(`${storedResumeAnalysis.skills.join(', ')}\n\n${storedResumeAnalysis.experienceSummary}`);
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            setHasCameraPermission(true);
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.oncanplay = async () => {
+                    if (initialQuestionGenerated.current) return;
+                    initialQuestionGenerated.current = true;
+                    
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    const videoFrameDataUri = captureVideoFrame();
+                    if (videoFrameDataUri) {
+                        try {
+                            const result = await generateIceBreakerQuestion({ videoFrameDataUri, language: langName });
+                            setCurrentQuestion(result.question);
+                        } catch (aiError) {
+                            console.error("Ice breaker generation failed:", aiError);
+                            setCurrentQuestion("Tell me about yourself.");
+                        }
+                    } else {
+                        setCurrentQuestion("Tell me about yourself.");
+                    }
+                    setIsLoading(false);
+                };
+            } else {
+                setCurrentQuestion("Tell me about yourself.");
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            setHasCameraPermission(false);
+            toast({
+                variant: 'destructive',
+                title: 'Camera Access Denied',
+                description: 'Video analysis will be disabled. The interview will start with a generic question.',
+            });
+            setCurrentQuestion("Tell me about yourself.");
+            setIsLoading(false);
+        }
+    }
+
+    setupInterview();
+
+    return () => {
+      const stream = videoRef.current?.srcObject as MediaStream;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const speak = (text: string) => {
     if ('speechSynthesis' in window && text) {
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language;
@@ -214,7 +258,7 @@ export function InterviewSession() {
       if (result.isInterviewOver) {
         setInterviewFinished(true);
         saveInterviewSummary(newInterviewData);
-        setCurrentQuestion(result.nextQuestion); // This will be the closing remark
+        setCurrentQuestion(result.nextQuestion);
       } else {
         setCurrentQuestion(result.nextQuestion);
         setTranscript("");
@@ -231,8 +275,8 @@ export function InterviewSession() {
     }
   };
 
-  if (isLoading && !currentQuestion) {
-    return <div className="flex justify-center items-center h-64"><Loader className="animate-spin mr-2" /> Loading interview...</div>;
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64"><Loader className="animate-spin mr-2" /> Preparing your interview...</div>;
   }
   
   if(interviewFinished) {
@@ -246,7 +290,7 @@ export function InterviewSession() {
           <p className="mb-6">You've successfully completed the mock interview. Well done! You can now view your detailed performance summary.</p>
           <Button asChild size="lg">
             <Link href="/summary">
-                <span className="inline-flex items-center gap-2">View Summary <ArrowRight /></span>
+              <span className="inline-flex items-center gap-2">View Summary <ArrowRight /></span>
             </Link>
           </Button>
         </CardContent>
