@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -50,6 +51,11 @@ export function PrepareFlow() {
 
   const jobDetailsForm = useForm<JobDetailsFormValues>({
     resolver: zodResolver(jobDetailsSchema),
+    defaultValues: {
+      jobRole: "",
+      company: "",
+      language: "English",
+    },
   });
 
   const handleResumeSubmit: SubmitHandler<ResumeFormValues> = async (data) => {
@@ -221,6 +227,8 @@ export function PrepareFlow() {
                                 <SelectItem value="Spanish">Spanish</SelectItem>
                                 <SelectItem value="French">French</SelectItem>
                                 <SelectItem value="German">German</SelectItem>
+                                <SelectItem value="Hindi">Hindi</SelectItem>
+                                <SelectItem value="Hinglish">Hinglish</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
