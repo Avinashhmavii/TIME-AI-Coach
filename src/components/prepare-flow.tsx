@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { saveQuestions, saveResumeAnalysis, saveVideoPreference } from "@/lib/data-store";
-import { ArrowRight, CheckCircle, FileText, Loader, Mic, Sparkles, Camera } from "lucide-react";
+import { saveQuestions, saveResumeAnalysis, saveVideoPreference, saveInterviewMode } from "@/lib/data-store";
+import { ArrowRight, CheckCircle, FileText, Loader, Mic, Sparkles, Camera, Keyboard } from "lucide-react";
 import Link from "next/link";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -296,11 +296,11 @@ export function PrepareFlow() {
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><CheckCircle className="text-green-500"/>Ready for your interview!</CardTitle>
-                    <CardDescription>Your personalized interview is ready. Find a quiet place, relax, and click the button below when you're ready to start.</CardDescription>
+                    <CardDescription>Your personalized interview is ready. Choose your preferred interview format below.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-4 rounded-md border p-4">
-                        <h4 className="font-semibold">Optional: Camera Setup</h4>
+                        <h4 className="font-semibold">Optional: Camera Setup (For Voice Interview)</h4>
                         <div className="flex items-center space-x-2">
                             <Switch id="video-enabled" checked={videoEnabled} onCheckedChange={setVideoEnabled} />
                             <Label htmlFor="video-enabled">Enable Video for Enhanced Feedback</Label>
@@ -323,14 +323,30 @@ export function PrepareFlow() {
                         </Dialog>
                     </div>
 
-                    <Button asChild size="lg" onClick={() => saveVideoPreference(videoEnabled)}>
-                        <Link href="/interview">
-                            <span className="inline-flex items-center gap-2">
-                                Start Mock Interview
-                                <Mic />
-                            </span>
-                        </Link>
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <Button asChild size="lg" onClick={() => {
+                            saveVideoPreference(videoEnabled);
+                            saveInterviewMode('voice');
+                        }}>
+                            <Link href="/interview">
+                                <span className="inline-flex items-center gap-2">
+                                    Start Voice Interview
+                                    <Mic />
+                                </span>
+                            </Link>
+                        </Button>
+                        <Button asChild size="lg" variant="outline" onClick={() => {
+                            saveVideoPreference(false);
+                            saveInterviewMode('text');
+                        }}>
+                             <Link href="/interview">
+                                <span className="inline-flex items-center gap-2">
+                                    Start Text Interview
+                                    <Keyboard />
+                                </span>
+                            </Link>
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         );

@@ -8,6 +8,9 @@ const RESUME_ANALYSIS_KEY = 'careerSpark_resumeAnalysis';
 const QUESTIONS_KEY = 'careerSpark_questions';
 const INTERVIEW_SUMMARY_KEY = 'careerSpark_interviewSummary';
 const VIDEO_PREFERENCE_KEY = 'careerSpark_videoPreference';
+const INTERVIEW_MODE_KEY = 'careerSpark_interviewMode';
+
+export type InterviewMode = 'voice' | 'text';
 
 export type InterviewData = {
   question: string;
@@ -19,6 +22,19 @@ export type QuestionsData = GenerateRoleSpecificQuestionsOutput & {
   language: string;
   jobRole: string;
   company: string;
+};
+
+// Interview Mode
+export const saveInterviewMode = (mode: InterviewMode) => {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(INTERVIEW_MODE_KEY, mode);
+    }
+};
+
+export const getInterviewMode = (): InterviewMode | null => {
+    if (typeof window === 'undefined') return null;
+    const data = localStorage.getItem(INTERVIEW_MODE_KEY);
+    return data as InterviewMode | null;
 };
 
 // Video Preference
@@ -80,6 +96,7 @@ export const clearData = () => {
         localStorage.removeItem(RESUME_ANALYSIS_KEY);
         localStorage.removeItem(QUESTIONS_KEY);
         localStorage.removeItem(VIDEO_PREFERENCE_KEY);
+        localStorage.removeItem(INTERVIEW_MODE_KEY);
         // We keep the summary so user can review it later
     }
 }
