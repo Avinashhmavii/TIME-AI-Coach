@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-import { getQuestions, getResumeAnalysis, saveInterviewSummary, type InterviewData } from "@/lib/data-store";
+import { getQuestions, getResumeAnalysis, saveInterviewSummary, type InterviewData, getVideoPreference } from "@/lib/data-store";
 import { interviewAgent, type InterviewAgentOutput } from "@/ai/flows/interview-agent";
 import { generateIceBreakerQuestion } from "@/ai/flows/ice-breaker-generator";
 import { useToast } from "@/hooks/use-toast";
@@ -80,22 +80,21 @@ export function InterviewSession() {
     }
 
     const captureVideoFrame = (): string | undefined => {
-      if (!hasCameraPermission || !videoRef.current || !canvasRef.current) {
-          return undefined;
-      }
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          return canvas.toDataURL('image/jpeg');
-      }
-      return undefined;
+        if (!hasCameraPermission || !videoRef.current || !canvasRef.current) {
+            return undefined;
+        }
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/jpeg');
+        }
+        return undefined;
     }
 
-    // 2. Setup Interview async
     const setupInterview = async () => {
         const storedQuestionsData = getQuestions();
         const storedResumeAnalysis = getResumeAnalysis();
@@ -111,6 +110,15 @@ export function InterviewSession() {
         setJobRole(storedQuestionsData.jobRole);
         setCompany(storedQuestionsData.company);
         setResumeText(`${storedResumeAnalysis.skills.join(', ')}\n\n${storedResumeAnalysis.experienceSummary}`);
+        
+        const videoIsEnabled = getVideoPreference();
+
+        if (!videoIsEnabled) {
+            setHasCameraPermission(false);
+            setCurrentQuestion("Tell me about yourself.");
+            setIsLoading(false);
+            return;
+        }
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -158,8 +166,8 @@ export function InterviewSession() {
     setupInterview();
 
     return () => {
-      const stream = videoRef.current?.srcObject as MediaStream;
-      if (stream) {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
       if (recognitionRef.current) {
@@ -275,7 +283,7 @@ export function InterviewSession() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !currentQuestion) {
     return <div className="flex justify-center items-center h-64"><Loader className="animate-spin mr-2" /> Preparing your interview...</div>;
   }
   
@@ -312,9 +320,9 @@ export function InterviewSession() {
                         {hasCameraPermission === false && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                                 <Alert variant="destructive" className="w-4/5">
-                                    <AlertTitle>Camera Access Required</AlertTitle>
+                                    <AlertTitle>Video Disabled</AlertTitle>
                                     <AlertDescription>
-                                        Please allow camera access to use video analysis. You can still continue without video.
+                                        Video analysis is disabled. You can enable it in the preparation flow.
                                     </AlertDescription>
                                 </Alert>
                             </div>
@@ -373,7 +381,7 @@ export function InterviewSession() {
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl">Interviewer:</CardTitle>
                     <CardDescription className="text-lg text-foreground min-h-[5rem]">
-                        {isLoading ? <Loader className="animate-spin" /> : currentQuestion}
+                        {isLoading && !currentQuestion ? <Loader className="animate-spin" /> : currentQuestion}
                     </CardDescription>
                     <Button variant="outline" size="sm" onClick={() => speak(currentQuestion || '')} className="flex items-center gap-2 w-fit" disabled={isLoading}>
                         <Volume2 className="w-4 h-4"/>

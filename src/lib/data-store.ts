@@ -7,6 +7,7 @@ import type { GenerateRoleSpecificQuestionsOutput } from '@/ai/flows/interview-q
 const RESUME_ANALYSIS_KEY = 'careerSpark_resumeAnalysis';
 const QUESTIONS_KEY = 'careerSpark_questions';
 const INTERVIEW_SUMMARY_KEY = 'careerSpark_interviewSummary';
+const VIDEO_PREFERENCE_KEY = 'careerSpark_videoPreference';
 
 export type InterviewData = {
   question: string;
@@ -18,6 +19,20 @@ export type QuestionsData = GenerateRoleSpecificQuestionsOutput & {
   language: string;
   jobRole: string;
   company: string;
+};
+
+// Video Preference
+export const saveVideoPreference = (enabled: boolean) => {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(VIDEO_PREFERENCE_KEY, JSON.stringify(enabled));
+    }
+};
+
+export const getVideoPreference = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const data = localStorage.getItem(VIDEO_PREFERENCE_KEY);
+    // Defaults to false if not set
+    return data ? JSON.parse(data) : false;
 };
 
 // Resume Analysis
@@ -64,6 +79,7 @@ export const clearData = () => {
     if (typeof window !== 'undefined') {
         localStorage.removeItem(RESUME_ANALYSIS_KEY);
         localStorage.removeItem(QUESTIONS_KEY);
+        localStorage.removeItem(VIDEO_PREFERENCE_KEY);
         // We keep the summary so user can review it later
     }
 }
