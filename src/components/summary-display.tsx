@@ -7,7 +7,7 @@ import { getInterviewSummary, type InterviewData } from "@/lib/data-store";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
-import { ThumbsUp, Lightbulb, BarChart, ArrowLeft } from "lucide-react";
+import { ThumbsUp, Lightbulb, BarChart, ArrowLeft, Smile } from "lucide-react";
 
 export function SummaryDisplay() {
   const [summary, setSummary] = useState<InterviewData[] | null>(null);
@@ -82,6 +82,15 @@ export function SummaryDisplay() {
                                             <p className="text-muted-foreground">{item.feedback.toneFeedback}</p>
                                         </div>
                                     </div>
+                                    {item.feedback.visualFeedback && (
+                                    <div className="flex items-start gap-4">
+                                        <div className="bg-secondary p-2 rounded-full"><Smile className="text-primary"/></div>
+                                        <div>
+                                            <h5 className="font-semibold">Visuals</h5>
+                                            <p className="text-muted-foreground">{item.feedback.visualFeedback}</p>
+                                        </div>
+                                    </div>
+                                    )}
                                </div>
                             </div>
                         </AccordionContent>
