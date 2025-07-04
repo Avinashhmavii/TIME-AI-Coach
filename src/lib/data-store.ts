@@ -14,6 +14,10 @@ export type InterviewData = {
   feedback: GetRealTimeFeedbackOutput;
 };
 
+export type QuestionsData = GenerateRoleSpecificQuestionsOutput & {
+  language: string;
+};
+
 // Resume Analysis
 export const saveResumeAnalysis = (data: AnalyzeResumeOutput) => {
   if (typeof window !== 'undefined') {
@@ -28,13 +32,14 @@ export const getResumeAnalysis = (): AnalyzeResumeOutput | null => {
 };
 
 // Questions
-export const saveQuestions = (data: GenerateRoleSpecificQuestionsOutput) => {
+export const saveQuestions = (data: GenerateRoleSpecificQuestionsOutput, language: string) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(QUESTIONS_KEY, JSON.stringify(data));
+      const questionsData: QuestionsData = { ...data, language };
+      localStorage.setItem(QUESTIONS_KEY, JSON.stringify(questionsData));
     }
 };
 
-export const getQuestions = (): GenerateRoleSpecificQuestionsOutput | null => {
+export const getQuestions = (): QuestionsData | null => {
     if (typeof window === 'undefined') return null;
     const data = localStorage.getItem(QUESTIONS_KEY);
     return data ? JSON.parse(data) : null;

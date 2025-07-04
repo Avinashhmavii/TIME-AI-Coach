@@ -3,17 +3,25 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-import { getQuestions, saveInterviewSummary, type InterviewData } from "@/lib/data-store";
+import { getQuestions, saveInterviewSummary, type InterviewData, type QuestionsData } from "@/lib/data-store";
 import { getRealTimeFeedback, type GetRealTimeFeedbackOutput } from "@/ai/flows/real-time-feedback";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
 import { Loader, Mic, MicOff, ArrowRight, Volume2, ThumbsUp, Lightbulb, BarChart } from "lucide-react";
-import { Progress } from "./ui/progress";
 import Link from "next/link";
 
+const languageCodeMap: Record<string, string> = {
+  "English": "en-US",
+  "Spanish": "es-ES",
+  "French": "fr-FR",
+  "German": "de-DE",
+};
+
+const getLanguageCode = (languageName: string) => {
+  return languageCodeMap[languageName] || "en-US";
+}
 
 export function InterviewSession() {
   const [questions, setQuestions] = useState<string[]>([]);
@@ -24,15 +32,19 @@ export function InterviewSession() {
   const [feedback, setFeedback] = useState<GetRealTimeFeedbackOutput | null>(null);
   const [interviewFinished, setInterviewFinished] = useState(false);
   const [interviewData, setInterviewData] = useState<InterviewData[]>([]);
+  const [language, setLanguage] = useState("en-US");
+  const [languageName, setLanguageName] = useState("English");
 
   const router = useRouter();
   const { toast } = useToast();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    const storedQuestions = getQuestions();
-    if (storedQuestions && storedQuestions.questions.length > 0) {
-      setQuestions(storedQuestions.questions);
+    const storedQuestionsData = getQuestions();
+    if (storedQuestionsData && storedQuestionsData.questions.length > 0) {
+      setQuestions(storedQuestionsData.questions);
+      setLanguage(getLanguageCode(storedQuestionsData.language));
+      setLanguageName(storedQuestionsData.language);
     } else {
       toast({
         variant: "destructive",
@@ -47,8 +59,7 @@ export function InterviewSession() {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'en-US';
-
+      
       recognitionRef.current.onresult = (event) => {
         let finalTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -72,6 +83,7 @@ export function InterviewSession() {
   const speakQuestion = (text: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language;
       window.speechSynthesis.speak(utterance);
     }
   }
@@ -93,6 +105,9 @@ export function InterviewSession() {
     } else {
       setTranscript("");
       setFeedback(null);
+      if (recognitionRef.current) {
+        recognitionRef.current.lang = language;
+      }
       recognitionRef.current?.start();
       setIsListening(true);
     }
@@ -102,7 +117,7 @@ export function InterviewSession() {
     setIsLoadingFeedback(true);
     try {
       const currentAnswer = transcript.trim();
-      const result = await getRealTimeFeedback({ transcript: currentAnswer });
+      const result = await getRealTimeFeedback({ transcript: currentAnswer, language: languageName });
       setFeedback(result);
       setInterviewData(prev => [...prev, {
         question: questions[currentQuestionIndex],
@@ -136,8 +151,6 @@ export function InterviewSession() {
     return <div className="flex justify-center items-center h-64"><Loader className="animate-spin" /></div>;
   }
   
-  const progressValue = ((currentQuestionIndex + 1) / questions.length) * 100;
-
   if(interviewFinished) {
     return (
       <Card className="max-w-2xl mx-auto text-center">
@@ -148,7 +161,9 @@ export function InterviewSession() {
         <CardContent>
           <p className="mb-6">You can now view your detailed performance summary.</p>
           <Button asChild size="lg">
-            <Link href="/summary"><span className="inline-flex items-center gap-2">View Summary <ArrowRight /></span></Link>
+            <Link href="/summary">
+                <span className="inline-flex items-center gap-2">View Summary <ArrowRight /></span>
+            </Link>
           </Button>
         </CardContent>
       </Card>
@@ -157,15 +172,14 @@ export function InterviewSession() {
 
   return (
     <div className="max-w-3xl mx-auto">
-        <Progress value={progressValue} className="mb-4" />
-        <p className="text-center text-muted-foreground mb-8">Question {currentQuestionIndex + 1} of {questions.length}</p>
+        <p className="text-center text-muted-foreground mb-8">Language: {languageName}</p>
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-2xl mb-4">{questions[currentQuestionIndex]}</CardTitle>
+          <CardTitle className="font-headline text-2xl mb-4">Mock Interview Call</CardTitle>
           <Button variant="outline" size="sm" onClick={() => speakQuestion(questions[currentQuestionIndex])} className="flex items-center gap-2">
             <Volume2 className="w-4 h-4"/>
-            Read Question Aloud
+            Repeat Question
           </Button>
         </CardHeader>
         <CardContent>

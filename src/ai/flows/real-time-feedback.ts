@@ -15,6 +15,7 @@ const GetRealTimeFeedbackInputSchema = z.object({
   transcript: z
     .string()
     .describe('The transcript of the user input during the mock interview.'),
+  language: z.string().describe('The language of the transcript and for the feedback.'),
 });
 export type GetRealTimeFeedbackInput = z.infer<typeof GetRealTimeFeedbackInputSchema>;
 
@@ -36,6 +37,7 @@ const prompt = ai.definePrompt({
   prompt: `You are an AI-powered interview coach providing real-time feedback during a mock interview.
 
   Analyze the following transcript and provide feedback on the content, tone, and clarity of the response.
+  The transcript is in {{{language}}}. Provide the feedback in {{{language}}} as well.
 
   Transcript: {{{transcript}}}
 

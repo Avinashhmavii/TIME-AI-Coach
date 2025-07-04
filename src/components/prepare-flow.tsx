@@ -19,6 +19,7 @@ import { saveQuestions, saveResumeAnalysis } from "@/lib/data-store";
 import { ArrowRight, CheckCircle, FileText, Loader, Mic, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Textarea } from "./ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 // Step 1: Resume Upload
 const resumeSchema = z.object({
@@ -30,6 +31,7 @@ type ResumeFormValues = z.infer<typeof resumeSchema>;
 const jobDetailsSchema = z.object({
   jobRole: z.string().min(2, "Job role is required."),
   company: z.string().min(2, "Company name is required."),
+  language: z.string({ required_error: "Please select a language." }),
 });
 type JobDetailsFormValues = z.infer<typeof jobDetailsSchema>;
 
@@ -90,11 +92,13 @@ export function PrepareFlow() {
     setIsLoading(true);
     try {
         const generatedQuestions = await generateRoleSpecificQuestions({
-            ...data,
+            jobRole: data.jobRole,
+            company: data.company,
+            language: data.language,
             resumeText: `${resumeAnalysis.skills.join(', ')}\n\n${resumeAnalysis.experienceSummary}`
         });
         setQuestions(generatedQuestions);
-        saveQuestions(generatedQuestions);
+        saveQuestions(generatedQuestions, data.language);
         setStep(3);
     } catch (error) {
         toast({
@@ -174,32 +178,55 @@ export function PrepareFlow() {
                 <CardContent>
                 <Form {...jobDetailsForm}>
                     <form onSubmit={jobDetailsForm.handleSubmit(handleJobDetailsSubmit)} className="space-y-6">
-                    <FormField
+                      <FormField
+                          control={jobDetailsForm.control}
+                          name="jobRole"
+                          render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Job Role</FormLabel>
+                              <FormControl>
+                              <Input placeholder="e.g., Software Engineer" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                          </FormItem>
+                          )}
+                      />
+                      <FormField
+                          control={jobDetailsForm.control}
+                          name="company"
+                          render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Company</FormLabel>
+                              <FormControl>
+                              <Input placeholder="e.g., Google" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                          </FormItem>
+                          )}
+                      />
+                      <FormField
                         control={jobDetailsForm.control}
-                        name="jobRole"
+                        name="language"
                         render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Job Role</FormLabel>
-                            <FormControl>
-                            <Input placeholder="e.g., Software Engineer" {...field} />
-                            </FormControl>
+                          <FormItem>
+                            <FormLabel>Interview Language</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a language" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="English">English</SelectItem>
+                                <SelectItem value="Spanish">Spanish</SelectItem>
+                                <SelectItem value="French">French</SelectItem>
+                                <SelectItem value="German">German</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
-                        </FormItem>
+                          </FormItem>
                         )}
-                    />
-                    <FormField
-                        control={jobDetailsForm.control}
-                        name="company"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Company</FormLabel>
-                            <FormControl>
-                            <Input placeholder="e.g., Google" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
+                      />
                      <Button type="submit" disabled={isLoading}>
                         {isLoading ? <Loader className="animate-spin" /> : 'Generate Questions'}
                         <ArrowRight className="ml-2" />

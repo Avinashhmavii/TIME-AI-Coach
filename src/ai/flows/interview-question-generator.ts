@@ -12,9 +12,10 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateRoleSpecificQuestionsInputSchema = z.object({
-  resumeText: z.string().describe('The text content of the user\'s resume.'),
+  resumeText: z.string().describe("The text content of the user's resume."),
   jobRole: z.string().describe('The job role for which the interview questions are being generated.'),
   company: z.string().describe('The company for which the interview questions are being generated.'),
+  language: z.string().describe('The language for the interview questions.'),
 });
 export type GenerateRoleSpecificQuestionsInput = z.infer<typeof GenerateRoleSpecificQuestionsInputSchema>;
 
@@ -34,13 +35,14 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert interview question generator.
 
 You will generate a set of interview questions tailored to the job role, company, and resume provided.
+The questions should be in the following language: {{{language}}}.
 
 Job Role: {{{jobRole}}}
 Company: {{{company}}}
 Resume:
 {{{resumeText}}}
 
-Generate a list of relevant interview questions:
+Generate a list of relevant interview questions in {{{language}}}:
 `,
 });
 
