@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Loader, Mic, ArrowRight, Volume2, ThumbsUp, Lightbulb, BarChart, Smile, Video, BrainCircuit } from "lucide-react";
 import Link from "next/link";
 import { Textarea } from "./ui/textarea";
+import { cn } from "@/lib/utils";
 
 type Feedback = Omit<InterviewAgentOutput, 'nextQuestion' | 'isInterviewOver'>;
 type ConversationState = 'loading' | 'speaking' | 'listening' | 'thinking' | 'finished' | 'idle';
@@ -41,6 +42,11 @@ export function InterviewSession() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [conversationState, setConversationState] = useState<ConversationState>('loading');
   
+  const conversationStateRef = useRef(conversationState);
+  useEffect(() => {
+    conversationStateRef.current = conversationState;
+  }, [conversationState]);
+
   // Data for the AI agent
   const [language, setLanguage] = useState("en-US");
   const [languageName, setLanguageName] = useState("");
@@ -73,15 +79,18 @@ export function InterviewSession() {
   }
 
   const handleSubmit = async () => {
-    if (!transcript.trim() || conversationState === 'thinking') {
+    if (!transcript.trim() || conversationStateRef.current === 'thinking') {
         return;
     }
 
     if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
-    if (recognitionRef.current) recognitionRef.current.stop();
     
+    // Change state to 'thinking' BEFORE stopping recognition.
+    // This prevents the 'onend' handler from incorrectly restarting it.
     setConversationState('thinking');
-    setFeedback(null);
+    if (recognitionRef.current) {
+        recognitionRef.current.stop();
+    }
 
     const videoFrameDataUri = (interviewMode === 'voice' && hasCameraPermission) ? captureVideoFrame() : undefined;
 
@@ -134,7 +143,7 @@ export function InterviewSession() {
         title: "AI Agent Error",
         description: error instanceof Error ? error.message : "An unknown error occurred.",
       });
-      setConversationState('listening');
+      setConversationState(interviewMode === 'voice' ? 'listening' : 'idle');
     }
   };
 
@@ -164,12 +173,9 @@ export function InterviewSession() {
           
           recognitionRef.current.onresult = (event) => {
             let finalTranscript = "";
-            let interimTranscript = "";
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if(event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript + ' ';
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
                 }
             }
             setTranscript(prev => prev + finalTranscript);
@@ -180,6 +186,16 @@ export function InterviewSession() {
             toast({variant: 'destructive', title: 'Speech Recognition Error', description: event.error});
             setConversationState('idle');
           }
+
+          recognitionRef.current.onend = () => {
+            // If recognition stops and we're supposed to be listening, restart it.
+            // This handles cases where the browser might automatically stop recognition after a long pause.
+            if (conversationStateRef.current === 'listening') {
+              console.log('Speech recognition service disconnected, attempting to restart.');
+              recognitionRef.current?.start();
+            }
+          };
+
         } else {
             toast({variant: 'destructive', title: 'Browser Not Supported', description: 'Speech recognition is not supported in this browser.'});
         }
@@ -195,7 +211,9 @@ export function InterviewSession() {
         }
 
         const langName = storedQuestionsData.language;
-        setLanguage(getLanguageCode(langName));
+        const langCode = getLanguageCode(langName);
+        setLanguage(langCode);
+        if(recognitionRef.current) recognitionRef.current.lang = langCode;
         setLanguageName(langName);
         setJobRole(storedQuestionsData.jobRole);
         setCompany(storedQuestionsData.company);
@@ -212,45 +230,49 @@ export function InterviewSession() {
         if (!videoIsEnabled) {
             setHasCameraPermission(false);
             setCurrentQuestion("Tell me about yourself.");
-            return;
-        }
+            // No return here, we still want to speak the first question
+        } else {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                setHasCameraPermission(true);
 
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            setHasCameraPermission(true);
-
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.oncanplay = async () => {
-                    if (initialQuestionGenerated.current) return;
-                    initialQuestionGenerated.current = true;
-                    
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    
-                    const videoFrameDataUri = captureVideoFrame();
-                    if (videoFrameDataUri) {
-                        try {
-                            const result = await generateIceBreakerQuestion({ videoFrameDataUri, language: langName });
-                            setCurrentQuestion(result.question);
-                        } catch (aiError) {
-                            console.error("Ice breaker generation failed:", aiError);
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.oncanplay = async () => {
+                        if (initialQuestionGenerated.current) return;
+                        initialQuestionGenerated.current = true;
+                        
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        const videoFrameDataUri = captureVideoFrame();
+                        if (videoFrameDataUri) {
+                            try {
+                                const result = await generateIceBreakerQuestion({ videoFrameDataUri, language: langName });
+                                setCurrentQuestion(result.question);
+                            } catch (aiError) {
+                                console.error("Ice breaker generation failed:", aiError);
+                                setCurrentQuestion("Tell me about yourself.");
+                            }
+                        } else {
                             setCurrentQuestion("Tell me about yourself.");
                         }
-                    } else {
-                        setCurrentQuestion("Tell me about yourself.");
-                    }
-                };
-            } else {
+                    };
+                } else {
+                    setCurrentQuestion("Tell me about yourself.");
+                }
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                setHasCameraPermission(false);
+                toast({
+                    variant: 'destructive',
+                    title: 'Camera Access Denied',
+                    description: 'Video analysis will be disabled. The interview will start with a generic question.',
+                });
                 setCurrentQuestion("Tell me about yourself.");
             }
-        } catch (error) {
-            console.error('Error accessing camera:', error);
-            setHasCameraPermission(false);
-            toast({
-                variant: 'destructive',
-                title: 'Camera Access Denied',
-                description: 'Video analysis will be disabled. The interview will start with a generic question.',
-            });
+        }
+
+        if (!currentQuestion && !initialQuestionGenerated.current) {
             setCurrentQuestion("Tell me about yourself.");
         }
     }
@@ -278,13 +300,13 @@ export function InterviewSession() {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language;
       utterance.onend = () => {
-        if (conversationState !== 'finished') {
+        if (conversationStateRef.current !== 'finished') {
+            setConversationState('listening');
             if (recognitionRef.current) {
                 setFeedback(null);
                 setTranscript("");
                 recognitionRef.current.start();
             }
-            setConversationState('listening');
         }
       }
       window.speechSynthesis.speak(utterance);
@@ -326,31 +348,19 @@ export function InterviewSession() {
     )
   }
 
-  const renderVoiceStatus = () => (
-    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-md text-muted-foreground">
-        {conversationState === 'listening' && <><Mic className="text-red-500 animate-pulse" /><span>Listening...</span></>}
-        {conversationState === 'thinking' && <><BrainCircuit className="text-primary animate-pulse" /><span>Analyzing...</span></>}
-        {conversationState === 'speaking' && <><Volume2 className="text-primary" /><span>Interviewer speaking...</span></>}
-        {conversationState === 'idle' && <><Mic className="text-muted-foreground" /><span>Ready.</span></>}
-    </div>
-  );
-
   const renderInputs = () => {
     if (interviewMode === 'voice') {
         return (
-            <div className="space-y-4">
-                {renderVoiceStatus()}
-                <Textarea
-                    placeholder="Your spoken answer will appear here. You can edit it before the pause timer submits."
-                    value={transcript}
-                    onChange={(e) => {
-                        setTranscript(e.target.value);
-                        startSubmissionTimer();
-                    }}
-                    className="min-h-[150px] text-base"
-                    disabled={conversationState !== 'listening'}
-                />
-            </div>
+            <Textarea
+                placeholder="Your spoken answer will appear here. You can edit it if needed."
+                value={transcript}
+                onChange={(e) => {
+                    setTranscript(e.target.value);
+                    startSubmissionTimer();
+                }}
+                className="min-h-[150px] text-base"
+                disabled={conversationState !== 'listening'}
+            />
         )
     }
     if (interviewMode === 'text') {
@@ -389,7 +399,7 @@ export function InterviewSession() {
                                     <Alert variant="destructive" className="w-4/5">
                                         <AlertTitle>Video Disabled</AlertTitle>
                                         <AlertDescription>
-                                            Video analysis is disabled. You can enable it in the preparation flow.
+                                            Camera is disabled or access was denied.
                                         </AlertDescription>
                                     </Alert>
                                 </div>
@@ -445,11 +455,21 @@ export function InterviewSession() {
             )}
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 sticky top-8">
             <p className="text-center text-muted-foreground">Language: {languageName}</p>
-            <Card>
+             <Card className={cn(
+                "transition-all duration-300",
+                conversationState === 'listening' && 'border-primary ring-2 ring-primary/50',
+                conversationState === 'thinking' && 'border-amber-400 ring-2 ring-amber-400/50',
+                conversationState === 'speaking' && 'border-blue-400 ring-2 ring-blue-400/50'
+            )}>
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Interviewer:</CardTitle>
+                    <CardTitle className="font-headline text-2xl flex items-center gap-2 min-h-[2rem]">
+                        {interviewMode === 'voice' && conversationState === 'speaking' && <><Volume2 className="text-primary" /><span>Interviewer speaking...</span></>}
+                        {interviewMode === 'voice' && conversationState === 'listening' && <><Mic className="text-red-500 animate-pulse" /><span>Listening...</span></>}
+                        {interviewMode === 'voice' && conversationState === 'thinking' && <><BrainCircuit className="text-primary animate-pulse" /><span>Analyzing...</span></>}
+                        {interviewMode === 'text' || ['idle', 'loading', 'finished'].includes(conversationState) && <span>Interviewer:</span>}
+                    </CardTitle>
                     <CardDescription className="text-lg text-foreground min-h-[5rem]">
                         {conversationState === 'loading' ? <Loader className="animate-spin" /> : currentQuestion}
                     </CardDescription>
@@ -462,5 +482,3 @@ export function InterviewSession() {
     </div>
   );
 }
-
-    
