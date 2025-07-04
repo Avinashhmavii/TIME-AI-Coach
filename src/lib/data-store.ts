@@ -1,6 +1,6 @@
 'use client';
 
-import type { GetRealTimeFeedbackOutput } from '@/ai/flows/real-time-feedback';
+import type { InterviewAgentOutput } from '@/ai/flows/interview-agent';
 import type { AnalyzeResumeOutput } from '@/ai/flows/resume-analyzer';
 import type { GenerateRoleSpecificQuestionsOutput } from '@/ai/flows/interview-question-generator';
 
@@ -11,11 +11,13 @@ const INTERVIEW_SUMMARY_KEY = 'careerSpark_interviewSummary';
 export type InterviewData = {
   question: string;
   answer: string;
-  feedback: GetRealTimeFeedbackOutput;
+  feedback: Omit<InterviewAgentOutput, 'nextQuestion' | 'isInterviewOver'>;
 };
 
 export type QuestionsData = GenerateRoleSpecificQuestionsOutput & {
   language: string;
+  jobRole: string;
+  company: string;
 };
 
 // Resume Analysis
@@ -32,9 +34,9 @@ export const getResumeAnalysis = (): AnalyzeResumeOutput | null => {
 };
 
 // Questions
-export const saveQuestions = (data: GenerateRoleSpecificQuestionsOutput, language: string) => {
+export const saveQuestions = (data: GenerateRoleSpecificQuestionsOutput, language: string, jobRole: string, company: string) => {
     if (typeof window !== 'undefined') {
-      const questionsData: QuestionsData = { ...data, language };
+      const questionsData: QuestionsData = { ...data, language, jobRole, company };
       localStorage.setItem(QUESTIONS_KEY, JSON.stringify(questionsData));
     }
 };

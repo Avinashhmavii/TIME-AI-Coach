@@ -104,7 +104,7 @@ export function PrepareFlow() {
             resumeText: `${resumeAnalysis.skills.join(', ')}\n\n${resumeAnalysis.experienceSummary}`
         });
         setQuestions(generatedQuestions);
-        saveQuestions(generatedQuestions, data.language);
+        saveQuestions(generatedQuestions, data.language, data.jobRole, data.company);
         setStep(3);
     } catch (error) {
         toast({
@@ -250,12 +250,10 @@ export function PrepareFlow() {
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><CheckCircle className="text-green-500"/>Ready for your interview!</CardTitle>
-                    <CardDescription>We've generated the following questions based on your resume and the job details.</CardDescription>
+                    <CardDescription>Your personalized interview is ready. The AI will ask you questions one by one, just like a real conversation.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ul className="space-y-4 mb-8 list-decimal list-inside">
-                        {questions?.questions.map((q, i) => <li key={i} className="p-3 bg-muted/50 rounded-md">{q}</li>)}
-                    </ul>
+                    <p className="mb-6 text-sm text-muted-foreground">You won't see the questions in advance. Find a quiet place, relax, and click the button below when you're ready to start.</p>
                     <Button asChild size="lg">
                         <Link href="/interview">
                             <span className="inline-flex items-center gap-2">

@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-import { getQuestions, saveInterviewSummary, type InterviewData, type QuestionsData } from "@/lib/data-store";
-import { getRealTimeFeedback, type GetRealTimeFeedbackOutput } from "@/ai/flows/real-time-feedback";
+import { getQuestions, getResumeAnalysis, saveInterviewSummary, type InterviewData, type QuestionsData } from "@/lib/data-store";
+import { interviewAgent, type InterviewAgentOutput } from "@/ai/flows/interview-agent";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "./ui/button";
@@ -12,11 +12,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader, Mic, MicOff, ArrowRight, Volume2, ThumbsUp, Lightbulb, BarChart } from "lucide-react";
 import Link from "next/link";
 
+type Feedback = Omit<InterviewAgentOutput, 'nextQuestion' | 'isInterviewOver'>;
+
 const languageCodeMap: Record<string, string> = {
   "English": "en-US",
   "Spanish": "es-ES",
   "French": "fr-FR",
   "German": "de-DE",
+  "Hindi": "hi-IN",
+  "Hinglish": "en-IN",
 };
 
 const getLanguageCode = (languageName: string) => {
@@ -24,16 +28,20 @@ const getLanguageCode = (languageName: string) => {
 }
 
 export function InterviewSession() {
-  const [questions, setQuestions] = useState<string[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<string | null>(null);
   const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
-  const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
-  const [feedback, setFeedback] = useState<GetRealTimeFeedbackOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [interviewFinished, setInterviewFinished] = useState(false);
   const [interviewData, setInterviewData] = useState<InterviewData[]>([]);
+  
+  // Data for the AI agent
   const [language, setLanguage] = useState("en-US");
   const [languageName, setLanguageName] = useState("English");
+  const [jobRole, setJobRole] = useState("");
+  const [company, setCompany] = useState("");
+  const [resumeText, setResumeText] = useState("");
 
   const router = useRouter();
   const { toast } = useToast();
@@ -41,17 +49,24 @@ export function InterviewSession() {
 
   useEffect(() => {
     const storedQuestionsData = getQuestions();
-    if (storedQuestionsData && storedQuestionsData.questions.length > 0) {
-      setQuestions(storedQuestionsData.questions);
+    const storedResumeAnalysis = getResumeAnalysis();
+
+    if (storedQuestionsData && storedQuestionsData.questions.length > 0 && storedResumeAnalysis) {
+      setCurrentQuestion(storedQuestionsData.questions[0]);
       setLanguage(getLanguageCode(storedQuestionsData.language));
       setLanguageName(storedQuestionsData.language);
+      setJobRole(storedQuestionsData.jobRole);
+      setCompany(storedQuestionsData.company);
+      setResumeText(`${storedResumeAnalysis.skills.join(', ')}\n\n${storedResumeAnalysis.experienceSummary}`);
+      setIsLoading(false);
     } else {
       toast({
         variant: "destructive",
-        title: "No questions found",
-        description: "Please go to the prepare page to generate questions first.",
+        title: "Missing Preparation Data",
+        description: "Please go to the prepare page to set up your interview first.",
       });
       router.push("/prepare");
+      return;
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -80,8 +95,10 @@ export function InterviewSession() {
 
   }, [router, toast]);
   
-  const speakQuestion = (text: string) => {
-    if ('speechSynthesis' in window) {
+  const speak = (text: string) => {
+    if ('speechSynthesis' in window && text) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language;
       window.speechSynthesis.speak(utterance);
@@ -89,19 +106,16 @@ export function InterviewSession() {
   }
 
   useEffect(() => {
-    if (questions.length > 0) {
-      speakQuestion(questions[currentQuestionIndex]);
+    if (currentQuestion) {
+      speak(currentQuestion);
     }
-  }, [currentQuestionIndex, questions]);
+  }, [currentQuestion]);
 
 
   const handleToggleListening = () => {
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
-      if (transcript.trim()) {
-        getFeedback();
-      }
     } else {
       setTranscript("");
       setFeedback(null);
@@ -113,42 +127,66 @@ export function InterviewSession() {
     }
   };
 
-  const getFeedback = async () => {
-    setIsLoadingFeedback(true);
+  const handleSubmitAnswer = async () => {
+    if (!transcript.trim()) {
+        toast({variant: 'destructive', title: 'No answer recorded', description: 'Please provide an answer before submitting.'});
+        return;
+    }
+    setIsLoading(true);
+    setFeedback(null);
+
     try {
       const currentAnswer = transcript.trim();
-      const result = await getRealTimeFeedback({ transcript: currentAnswer, language: languageName });
-      setFeedback(result);
+      
+      const result = await interviewAgent({
+        jobRole,
+        company,
+        resumeText,
+        language: languageName,
+        conversationHistory: interviewData.map(d => ({question: d.question, answer: d.answer})),
+        currentTranscript: currentAnswer
+      });
+      
+      const newFeedback: Feedback = {
+        contentFeedback: result.contentFeedback,
+        toneFeedback: result.toneFeedback,
+        clarityFeedback: result.clarityFeedback
+      };
+      
+      setFeedback(newFeedback);
+      
       setInterviewData(prev => [...prev, {
-        question: questions[currentQuestionIndex],
+        question: currentQuestion!,
         answer: currentAnswer,
-        feedback: result
+        feedback: newFeedback
       }]);
+
+      if (result.isInterviewOver) {
+        setInterviewFinished(true);
+        saveInterviewSummary([...interviewData, {
+             question: currentQuestion!,
+             answer: currentAnswer,
+             feedback: newFeedback
+        }]);
+        setCurrentQuestion(result.nextQuestion); // This will be the closing remark
+      } else {
+        setCurrentQuestion(result.nextQuestion);
+        setTranscript("");
+      }
+
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Feedback Error",
+        title: "AI Agent Error",
         description: error instanceof Error ? error.message : "An unknown error occurred.",
       });
     } finally {
-      setIsLoadingFeedback(false);
+      setIsLoading(false);
     }
   };
 
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setTranscript("");
-      setFeedback(null);
-      setIsListening(false);
-    } else {
-      setInterviewFinished(true);
-      saveInterviewSummary(interviewData);
-    }
-  };
-
-  if (questions.length === 0) {
-    return <div className="flex justify-center items-center h-64"><Loader className="animate-spin" /></div>;
+  if (isLoading && !currentQuestion) {
+    return <div className="flex justify-center items-center h-64"><Loader className="animate-spin mr-2" /> Loading interview...</div>;
   }
   
   if(interviewFinished) {
@@ -156,10 +194,10 @@ export function InterviewSession() {
       <Card className="max-w-2xl mx-auto text-center">
         <CardHeader>
           <CardTitle className="font-headline text-3xl">Interview Complete!</CardTitle>
-          <CardDescription>You've successfully completed the mock interview. Well done!</CardDescription>
+          <CardDescription>{currentQuestion}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="mb-6">You can now view your detailed performance summary.</p>
+          <p className="mb-6">You've successfully completed the mock interview. Well done! You can now view your detailed performance summary.</p>
           <Button asChild size="lg">
             <Link href="/summary">
                 <span className="inline-flex items-center gap-2">View Summary <ArrowRight /></span>
@@ -172,44 +210,41 @@ export function InterviewSession() {
 
   return (
     <div className="max-w-3xl mx-auto">
-        <p className="text-center text-muted-foreground mb-8">Language: {languageName}</p>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline text-2xl mb-4">Mock Interview Call</CardTitle>
-          <Button variant="outline" size="sm" onClick={() => speakQuestion(questions[currentQuestionIndex])} className="flex items-center gap-2">
-            <Volume2 className="w-4 h-4"/>
-            Repeat Question
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-                <Button onClick={handleToggleListening} size="lg" className={`w-32 ${isListening ? 'bg-red-500 hover:bg-red-600' : ''}`}>
-                {isListening ? <><MicOff className="mr-2"/>Stop</> : <><Mic className="mr-2"/>Answer</>}
+        <p className="text-center text-muted-foreground mb-4">Language: {languageName}</p>
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline text-2xl">Interviewer:</CardTitle>
+                <CardDescription className="text-lg text-foreground min-h-[5rem]">
+                    {isLoading ? <Loader className="animate-spin" /> : currentQuestion}
+                </CardDescription>
+                <Button variant="outline" size="sm" onClick={() => speak(currentQuestion || '')} className="flex items-center gap-2 w-fit" disabled={isLoading}>
+                    <Volume2 className="w-4 h-4"/>
+                    Repeat Question
                 </Button>
-                <p className="text-sm text-muted-foreground">{isListening ? "Listening... Click to stop." : "Click to start answering."}</p>
-            </div>
-            
-            <div className="min-h-[100px] bg-muted/50 p-4 rounded-md border">
-              <p className="text-muted-foreground font-semibold">Your answer:</p>
-              <p>{transcript || "..."}</p>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter>
-          {!feedback && !isLoadingFeedback && (
-             <Button onClick={getFeedback} disabled={!transcript.trim() || isListening}>Get Feedback</Button>
-          )}
-        </CardFooter>
-      </Card>
-
-      {isLoadingFeedback && (
-        <div className="text-center py-8 flex items-center justify-center gap-2 text-primary">
-          <Loader className="animate-spin" />
-          <span className="font-semibold">Analyzing your answer...</span>
-        </div>
-      )}
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Button onClick={handleToggleListening} size="lg" className={`w-32 ${isListening ? 'bg-red-500 hover:bg-red-600' : ''}`} disabled={isLoading}>
+                        {isListening ? <><MicOff className="mr-2"/>Stop</> : <><Mic className="mr-2"/>Answer</>}
+                        </Button>
+                        <p className="text-sm text-muted-foreground">{isListening ? "Listening... Click to stop." : "Click to start answering."}</p>
+                    </div>
+                    
+                    <div className="min-h-[100px] bg-muted/50 p-4 rounded-md border">
+                    <p className="text-muted-foreground font-semibold">Your answer:</p>
+                    <p>{transcript || "..."}</p>
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter>
+            {!isListening && transcript && (
+                <Button onClick={handleSubmitAnswer} disabled={isLoading}>
+                    {isLoading ? <><Loader className="animate-spin mr-2" />Thinking...</> : "Submit Answer"}
+                </Button>
+            )}
+            </CardFooter>
+        </Card>
 
       {feedback && (
         <Card className="mt-8">
@@ -239,12 +274,6 @@ export function InterviewSession() {
                 </div>
             </div>
           </CardContent>
-          <CardFooter>
-            <Button onClick={handleNextQuestion}>
-              {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Finish Interview'}
-              <ArrowRight className="ml-2"/>
-            </Button>
-          </CardFooter>
         </Card>
       )}
     </div>
