@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -13,6 +14,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Loader, Mic, MicOff, ArrowRight, Volume2, ThumbsUp, Lightbulb, BarChart, Smile, Video } from "lucide-react";
 import Link from "next/link";
+import { Textarea } from "./ui/textarea";
 
 type Feedback = Omit<InterviewAgentOutput, 'nextQuestion' | 'isInterviewOver'>;
 
@@ -68,7 +70,7 @@ export function InterviewSession() {
             finalTranscript += event.results[i][0].transcript;
           }
         }
-        setTranscript(prev => prev + finalTranscript);
+        setTranscript(prev => (prev ? prev + ' ' : '') + finalTranscript);
       };
 
       recognitionRef.current.onerror = (event) => {
@@ -198,7 +200,6 @@ export function InterviewSession() {
       recognitionRef.current?.stop();
       setIsListening(false);
     } else {
-      setTranscript("");
       setFeedback(null);
       if (recognitionRef.current) {
         recognitionRef.current.lang = language;
@@ -392,26 +393,29 @@ export function InterviewSession() {
                     <div className="space-y-4">
                         <div className="flex items-center gap-4">
                             <Button onClick={handleToggleListening} size="lg" className={`w-32 ${isListening ? 'bg-red-500 hover:bg-red-600' : ''}`} disabled={isLoading}>
-                                {isListening ? <span className="flex items-center"><MicOff className="mr-2"/>Stop</span> : <span className="flex items-center"><Mic className="mr-2"/>Answer</span>}
+                                {isListening ? <span className="flex items-center"><MicOff className="mr-2"/>Stop</span> : <span className="flex items-center"><Mic className="mr-2"/>Speak</span>}
                             </Button>
-                            <p className="text-sm text-muted-foreground">{isListening ? "Listening... Click to stop." : "Click to start answering."}</p>
+                            <p className="text-sm text-muted-foreground">{isListening ? "Listening... Click Stop when done." : "Click Speak to record your answer."}</p>
                         </div>
                         
-                        <div className="min-h-[100px] bg-muted/50 p-4 rounded-md border">
-                        <p className="text-muted-foreground font-semibold">Your answer:</p>
-                        <p>{transcript || "..."}</p>
-                        </div>
+                        <Textarea
+                            placeholder="You can speak your answer, type it here, or edit the transcript."
+                            value={transcript}
+                            onChange={(e) => setTranscript(e.target.value)}
+                            className="min-h-[150px] text-base"
+                            disabled={isLoading}
+                        />
                     </div>
                 </CardContent>
                 <CardFooter>
-                {!isListening && transcript && (
-                    <Button onClick={handleSubmitAnswer} disabled={isLoading}>
-                        {isLoading ? <span className="flex items-center"><Loader className="animate-spin mr-2" />Thinking...</span> : "Submit Answer"}
+                    <Button onClick={handleSubmitAnswer} disabled={isLoading || isListening || !transcript.trim()} className="w-full">
+                        {isLoading ? <span className="flex items-center justify-center"><Loader className="animate-spin mr-2" />Thinking...</span> : "Submit Answer"}
                     </Button>
-                )}
                 </CardFooter>
             </Card>
         </div>
     </div>
   );
 }
+
+    
