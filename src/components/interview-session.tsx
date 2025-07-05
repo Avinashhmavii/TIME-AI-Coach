@@ -199,6 +199,10 @@ export function InterviewSession() {
         saveInterviewSummary(newInterviewData);
         setCurrentQuestion(result.nextQuestion);
         setConversationState('finished');
+        // Give the user a moment to see the final message before redirecting
+        setTimeout(() => {
+            router.push('/summary');
+        }, 4000);
       } else {
         setTranscript("");
         setCurrentQuestion(result.nextQuestion);
@@ -287,10 +291,11 @@ export function InterviewSession() {
         if (interviewMode === 'voice' && videoIsEnabled) {
              try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                setHasCameraPermission(true);
 
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
+                    setHasCameraPermission(true);
+                    
                     // Wait for the video metadata to load to ensure dimensions are available
                     await new Promise(resolve => {
                         videoRef.current!.onloadedmetadata = () => {
@@ -464,7 +469,7 @@ export function InterviewSession() {
                     {isMuted ? <MicOff className="w-6 h-6"/> : <Mic className="w-6 h-6"/>}
                     <span className="sr-only">Mute</span>
                 </Button>
-                <Button size="lg" variant="destructive" className="rounded-full h-16 px-8" onClick={endInterview}>
+                <Button size="lg" variant="destructive" className="rounded-full h-16 px-8" onClick={endInterview} disabled={conversationState === 'finished'}>
                     <PhoneOff className="w-6 h-6 mr-2"/> End Call
                 </Button>
                 <Button size="icon" variant="ghost" className="rounded-full w-16 h-16 bg-gray-100 hover:bg-gray-200" onClick={() => setIsSpeakerMuted(prev => !prev)}>
@@ -473,7 +478,7 @@ export function InterviewSession() {
                 </Button>
                 </>
             ) : (
-                <Button size="lg" className="w-full" onClick={endInterview}>
+                <Button size="lg" className="w-full" onClick={endInterview} disabled={conversationState === 'finished'}>
                     End Interview
                 </Button>
             )}
