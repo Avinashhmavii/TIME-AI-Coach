@@ -219,71 +219,34 @@ export function InterviewSession() {
     }
   };
 
-  const getInitialQuestion = async (): Promise<string> => {
-    const defaultQuestion = `Hello ${candidateName || 'there'}, I am Tina, welcome to the CareerSpark AI interview prep. To make this session as helpful as possible, what area would you like to focus on? We can do behavioral questions, technical questions, dive deeper into your resume, or discuss the company.`;
-    const videoIsEnabled = getVideoPreference();
-
-    if (interviewMode !== 'voice' || !videoIsEnabled) {
-      setHasCameraPermission(false);
-      return defaultQuestion;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      // This check is now safe because the component has rendered
-      if (!videoRef.current) {
-        stream.getTracks().forEach(track => track.stop());
-        setHasCameraPermission(false);
-        toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not access the video element.' });
-        return defaultQuestion;
-      }
-      
-      videoRef.current.srcObject = stream;
-      setHasCameraPermission(true);
-
-      // Wait for the video to load to prevent capturing a blank frame
-      await new Promise(resolve => {
-        if (videoRef.current) videoRef.current.onloadedmetadata = () => resolve(true);
-      });
-      // Additional small delay to ensure the camera image is stable
-      await new Promise(resolve => setTimeout(resolve, 1500)); 
-
-      const videoFrameDataUri = captureVideoFrame();
-      if (!videoFrameDataUri) {
-        toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not capture a video frame. Starting with a default question.' });
-        return defaultQuestion;
-      }
-
-      const result = await generateIceBreakerQuestion({
-        candidateName: candidateName || 'there',
-        videoFrameDataUri,
-        language: languageName
-      });
-      return result.question;
-
-    } catch (error) {
-      console.error('Error in getInitialQuestion:', error);
-      setHasCameraPermission(false);
-      toast({
-        variant: 'destructive',
-        title: 'Camera Access Denied',
-        description: 'Please enable camera permissions. Video analysis will be disabled.',
-      });
-      return defaultQuestion;
-    }
-  };
-
-
   useEffect(() => {
+    // This effect runs once to set up the whole session.
     const setupInterview = async () => {
+        // 1. Get core data. Abort if missing.
         const mode = getInterviewMode();
-        if (!mode) {
-            toast({ variant: "destructive", title: "Missing Interview Mode", description: "Please go to the prepare page and select an interview type." });
+        const storedQuestionsData = getQuestions();
+        const storedResumeAnalysis = getResumeAnalysis();
+        const videoIsEnabled = getVideoPreference();
+
+        if (!mode || !storedQuestionsData || !storedResumeAnalysis) {
+            toast({ variant: "destructive", title: "Missing Preparation Data", description: "Please go to the prepare page first." });
             router.push("/prepare");
             return;
         }
-        setInterviewMode(mode);
 
+        // 2. Set up component state from stored data.
+        setInterviewMode(mode);
+        const { candidateName, skills, experienceSummary } = storedResumeAnalysis;
+        const { language, jobRole, company } = storedQuestionsData;
+        const langCode = getLanguageCode(language);
+        setCandidateName(candidateName);
+        setResumeText(`${skills.join(', ')}\n\n${experienceSummary}`);
+        setLanguage(langCode);
+        setLanguageName(language);
+        setJobRole(jobRole);
+        setCompany(company);
+
+        // 3. Set up speech recognition if in voice mode.
         if (mode === 'voice') {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (SpeechRecognition) {
@@ -291,6 +254,7 @@ export function InterviewSession() {
               const recognition = recognitionRef.current;
               recognition.continuous = true;
               recognition.interimResults = true;
+              recognition.lang = langCode;
               
               recognition.onresult = (event) => {
                 let finalTranscript = "";
@@ -323,28 +287,51 @@ export function InterviewSession() {
             }
         }
         
-        const storedQuestionsData = getQuestions();
-        const storedResumeAnalysis = getResumeAnalysis();
-        if (!storedQuestionsData || !storedResumeAnalysis) {
-            toast({ variant: "destructive", title: "Missing Preparation Data", description: "Please go to the prepare page first." });
-            router.push("/prepare");
+        // 4. Get the initial question.
+        const defaultGreeting = `Hello ${candidateName}, I am Tina, welcome to the CareerSpark AI interview prep. To make this session as helpful as possible, what area would you like to focus on? We can do behavioral questions, technical questions, dive deeper into your resume, or discuss the company.`;
+
+        if (mode !== 'voice' || !videoIsEnabled) {
+            setHasCameraPermission(false);
+            setCurrentQuestion(defaultGreeting);
             return;
         }
 
-        const langName = storedQuestionsData.language;
-        const langCode = getLanguageCode(langName);
-        setLanguage(langCode);
-        if(recognitionRef.current) recognitionRef.current.lang = langCode;
-        setLanguageName(langName);
-        setJobRole(storedQuestionsData.jobRole);
-        setCompany(storedQuestionsData.company);
-        
-        const { candidateName, skills, experienceSummary } = storedResumeAnalysis;
-        setCandidateName(candidateName);
-        setResumeText(`${skills.join(', ')}\n\n${experienceSummary}`);
-        
-        const initialQuestion = await getInitialQuestion();
-        setCurrentQuestion(initialQuestion);
+        // We are in voice mode with video enabled. Try to get permissions.
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+            setHasCameraPermission(true);
+
+            // Now that we have permission and the stream, get the icebreaker.
+            await new Promise(resolve => {
+                if (videoRef.current) videoRef.current.onloadedmetadata = () => resolve(true);
+            });
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const videoFrameDataUri = captureVideoFrame();
+            if (!videoFrameDataUri) {
+                throw new Error("Could not capture video frame.");
+            }
+
+            const result = await generateIceBreakerQuestion({
+                candidateName,
+                videoFrameDataUri,
+                language,
+            });
+            setCurrentQuestion(result.question);
+
+        } catch (error) {
+            console.error('Error getting camera or icebreaker:', error);
+            setHasCameraPermission(false);
+            toast({
+                variant: 'destructive',
+                title: 'Camera Error',
+                description: 'Could not access camera. Video analysis is disabled.',
+            });
+            setCurrentQuestion(defaultGreeting);
+        }
     };
 
     setupInterview();
@@ -427,7 +414,7 @@ export function InterviewSession() {
         <div className="flex-1 flex flex-col justify-center">
             {interviewMode === 'voice' && getVideoPreference() ? (
             <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden shadow-inner flex items-center justify-center relative">
-                <video ref={videoRef} className={cn("w-full h-full object-cover", hasCameraPermission ? 'block' : 'hidden')} autoPlay muted playsInline />
+                <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                 {hasCameraPermission === null && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/80">
                     <Loader className="w-8 h-8 mx-auto mb-2 animate-spin" />
