@@ -40,6 +40,7 @@ const getLanguageCode = (languageName: string) => {
 }
 
 export function InterviewSession() {
+  const [isReady, setIsReady] = useState(false);
   const [interviewMode, setInterviewMode] = useState<InterviewMode | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [transcript, setTranscript] = useState("");
@@ -305,6 +306,7 @@ export function InterviewSession() {
         }
 
         setCurrentQuestion(initialQuestion);
+        setIsReady(true);
     }
 
     setupInterview(mode);
@@ -365,7 +367,7 @@ export function InterviewSession() {
   }, [currentQuestion]);
 
 
-  if (conversationState === 'loading' && !currentQuestion) {
+  if (!isReady) {
     return <div className="flex justify-center items-center h-screen"><Loader className="animate-spin mr-2" /> Preparing your interview...</div>;
   }
 
