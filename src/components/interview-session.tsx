@@ -195,6 +195,8 @@ export function InterviewSession() {
       }];
       setInterviewData(newInterviewData);
 
+      setConversationLog(prev => [...prev, { speaker: 'ai', text: result.nextQuestion }]);
+
       if (result.isInterviewOver) {
         saveInterviewSummary(newInterviewData);
         setCurrentQuestion(result.nextQuestion);
@@ -283,7 +285,12 @@ export function InterviewSession() {
         setLanguageName(langName);
         setJobRole(storedQuestionsData.jobRole);
         setCompany(storedQuestionsData.company);
-        setResumeText(`${storedResumeAnalysis.skills.join(', ')}\n\n${storedResumeAnalysis.experienceSummary}`);
+        
+        const { candidateName, skills, experienceSummary } = storedResumeAnalysis;
+        setResumeText(`${skills.join(', ')}\n\n${experienceSummary}`);
+        
+        const greetingName = candidateName || "there";
+        const defaultQuestion = `Hello ${greetingName}, I am Tina, welcome to the CareerSpark AI interview prep. To begin, please tell me a little about yourself.`;
         
         const videoIsEnabled = getVideoPreference();
         if (interviewMode === 'voice' && videoIsEnabled) {
@@ -294,36 +301,45 @@ export function InterviewSession() {
                     videoRef.current.srcObject = stream;
                     setHasCameraPermission(true);
                     
-                    // Wait for the video metadata to load to ensure dimensions are available
                     await new Promise(resolve => {
                         if (videoRef.current) {
                             videoRef.current.onloadedmetadata = () => resolve(null);
+                        } else {
+                            resolve(null);
                         }
                     });
 
-                    if (!initialQuestionGenerated.current) {
-                        initialQuestionGenerated.current = true;
-                        // Wait a moment for the camera to auto-adjust focus and exposure
-                        await new Promise(resolve => setTimeout(resolve, 1500)); 
-                        const videoFrameDataUri = captureVideoFrame();
+                    if (initialQuestionGenerated.current) {
+                        setCurrentQuestion(defaultQuestion);
+                        setIsReady(true);
+                        return;
+                    }
+                    initialQuestionGenerated.current = true;
+                    
+                    await new Promise(resolve => setTimeout(resolve, 1500)); 
+                    const videoFrameDataUri = captureVideoFrame();
 
-                        if (videoFrameDataUri) {
-                            try {
-                                const result = await generateIceBreakerQuestion({ videoFrameDataUri, language: langName });
-                                setCurrentQuestion(result.question);
-                            } catch (aiError) {
-                                console.error("Ice breaker generation failed:", aiError);
-                                toast({ variant: 'destructive', title: 'Icebreaker Error', description: 'Could not generate a welcome question. Starting with a default.' });
-                                setCurrentQuestion("Tell me about yourself.");
-                            }
-                        } else {
-                             console.error("Failed to capture video frame for icebreaker.");
-                             toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not capture a video frame. Starting with a default question.' });
-                             setCurrentQuestion("Tell me about yourself.");
+                    if (videoFrameDataUri) {
+                        try {
+                            const result = await generateIceBreakerQuestion({ 
+                                candidateName: greetingName,
+                                videoFrameDataUri, 
+                                language: langName 
+                            });
+                            setCurrentQuestion(result.question);
+                        } catch (aiError) {
+                            console.error("Ice breaker generation failed:", aiError);
+                            toast({ variant: 'destructive', title: 'Icebreaker Error', description: 'Could not generate a welcome question. Starting with a default.' });
+                            setCurrentQuestion(defaultQuestion);
                         }
                     } else {
-                        setCurrentQuestion("Tell me about yourself.");
+                         console.error("Failed to capture video frame for icebreaker.");
+                         toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not capture a video frame. Starting with a default question.' });
+                         setCurrentQuestion(defaultQuestion);
                     }
+                } else {
+                     setHasCameraPermission(false);
+                     setCurrentQuestion(defaultQuestion);
                 }
             } catch (error) {
                 console.error('Error accessing camera:', error);
@@ -331,17 +347,17 @@ export function InterviewSession() {
                 toast({
                     variant: 'destructive',
                     title: 'Camera Access Denied',
-                    description: 'Video analysis will be disabled.',
+                    description: 'Video analysis will be disabled. Proceeding without video-based questions.',
                 });
-                setCurrentQuestion("Tell me about yourself.");
+                setCurrentQuestion(defaultQuestion);
             }
         } else {
             setHasCameraPermission(false);
-            setCurrentQuestion("Tell me about yourself.");
+            setCurrentQuestion(defaultQuestion);
         }
 
         setIsReady(true);
-    }
+    };
 
     setupInterview(mode);
 
@@ -365,7 +381,8 @@ export function InterviewSession() {
     if (!text) return;
 
     setConversationLog(prev => {
-        if(prev[prev.length - 1]?.text === text) return prev;
+        // Prevent duplicate AI messages in the log
+        if(prev[prev.length - 1]?.speaker === 'ai' && prev[prev.length - 1]?.text === text) return prev;
         return [...prev, { speaker: 'ai', text }];
     });
 
@@ -396,14 +413,13 @@ export function InterviewSession() {
   }
 
   useEffect(() => {
-    if (currentQuestion && (conversationState === 'loading' || conversationState === 'thinking')) {
-      speak(currentQuestion);
-    } else if (currentQuestion && conversationState === 'finished') {
-      // For the final message, we also want to speak it out.
+    // This effect runs when the component first loads and gets the initial question,
+    // or when the AI generates a new question after a user's turn.
+    if (currentQuestion && (conversationState === 'loading' || conversationState === 'thinking' || conversationState === 'finished')) {
       speak(currentQuestion);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestion, isSpeakerMuted]);
+  }, [currentQuestion]);
 
 
   if (!isReady) {

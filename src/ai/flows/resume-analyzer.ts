@@ -22,6 +22,7 @@ export type AnalyzeResumeInput = z.infer<typeof AnalyzeResumeInputSchema>;
 
 const AnalyzeResumeOutputSchema = z.object({
   isResume: z.boolean().describe('Whether the provided document appears to be a resume.'),
+  candidateName: z.string().describe("The full name of the candidate as it appears on the resume. If not found, return an empty string."),
   skills: z.array(z.string()).describe('A list of key skills identified in the resume. Returns an empty array if the document is not a resume.'),
   experienceSummary: z.string().describe("A summary of the candidate's relevant experience. Returns an empty string if the document is not a resume.")
 });
@@ -38,8 +39,12 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert career advisor specializing in resume analysis.
 
 Your first task is to determine if the provided document is a resume. Look for common resume sections like "Experience", "Education", "Skills", and contact information.
-If the document is a resume, set 'isResume' to true. Then, analyze it to extract the key skills and provide a concise summary of the candidate's experience.
-If the document does not appear to be a resume, set 'isResume' to false and return an empty array for skills and an empty string for the experience summary.
+If the document is a resume, set 'isResume' to true. Then, analyze it to extract the following:
+1. The candidate's full name. Look for the most prominent name, usually at the top.
+2. The key skills.
+3. A concise summary of the candidate's experience.
+
+If the document does not appear to be a resume, set 'isResume' to false and return empty strings and arrays for the other fields.
 
 Document for analysis:
 {{media url=resumeDataUri}}
