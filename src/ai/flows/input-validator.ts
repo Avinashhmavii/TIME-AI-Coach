@@ -30,11 +30,15 @@ const prompt = ai.definePrompt({
     input: {schema: ValidateInputSchema},
     output: {schema: ValidateOutputSchema},
     prompt: `You are a content moderator for a professional career application.
-Your task is to determine if the provided text is appropriate for a 'job role' or 'company name'.
-The text should be professional and not contain any profanity, hate speech, harassment, dangerous, or sexually explicit content.
+Your task is to determine if the provided text is a plausible 'job role' or 'company name'.
+The text must be a realistic job title or company name. It should not be gibberish, random characters, or nonsensical.
+The text must also be professional and not contain any profanity, hate speech, harassment, dangerous, or sexually explicit content.
 
-If the text is appropriate, set 'isValid' to true.
-If the text is inappropriate, set 'isValid' to false and provide a brief, user-friendly 'reason' like "This input is not allowed." or "Input contains inappropriate language.". Do not repeat the user's input in the reason.
+If the text is a plausible and appropriate job role or company name, set 'isValid' to true.
+If the text is not plausible (e.g., "gvsjhvdf", "asdfasdf") or is inappropriate, set 'isValid' to false and provide a brief, user-friendly 'reason'.
+- For nonsensical input, a good reason is "Please enter a valid job role/company name."
+- For inappropriate input, a good reason is "This input contains inappropriate language."
+Do not repeat the user's input in the reason.
 
 Text to validate:
 ---
