@@ -76,7 +76,6 @@ export function InterviewSession() {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const initialQuestionGenerated = useRef(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const shouldBeListening = useRef(false); // Ref to manage intentional listening state
 
@@ -220,56 +219,121 @@ export function InterviewSession() {
     }
   };
 
-  useEffect(() => {
-    const mode = getInterviewMode();
-    if (!mode) {
-        toast({ variant: "destructive", title: "Missing Interview Mode", description: "Please go to the prepare page and select an interview type." });
-        router.push("/prepare");
-        return;
-    }
-    setInterviewMode(mode);
+  const getInitialQuestion = async (
+    interviewMode: InterviewMode,
+    langName: string,
+    greetingName: string
+  ): Promise<string> => {
+      const defaultQuestion = `Hello ${greetingName}, I am Tina, welcome to the CareerSpark AI interview prep. To begin, please tell me a little about yourself.`;
+      const videoIsEnabled = getVideoPreference();
 
-    if (mode === 'voice') {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-          recognitionRef.current = new SpeechRecognition();
-          const recognition = recognitionRef.current;
-          recognition.continuous = true;
-          recognition.interimResults = true;
+      if (interviewMode !== 'voice' || !videoIsEnabled) {
+          setHasCameraPermission(false);
+          return defaultQuestion;
+      }
+
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          if (!videoRef.current) {
+              stream.getTracks().forEach(track => track.stop());
+              setHasCameraPermission(false);
+              return defaultQuestion;
+          }
           
-          recognition.onresult = (event) => {
-            let finalTranscript = "";
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if(event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + ' ';
-                }
-            }
-            if (finalTranscript) {
-                setTranscript(prev => prev + finalTranscript);
-            }
-          };
-    
-          recognition.onerror = (event) => {
-            toast({variant: 'destructive', title: 'Speech Recognition Error', description: event.error});
-            if (event.error !== 'network' && event.error !== 'no-speech') {
-                setConversationState('idle');
-            }
+          videoRef.current.srcObject = stream;
+          setHasCameraPermission(true);
+
+          await new Promise<void>(resolve => {
+              if (videoRef.current) {
+                  videoRef.current.onloadedmetadata = () => resolve();
+              } else {
+                  resolve();
+              }
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          const videoFrameDataUri = captureVideoFrame();
+          if (!videoFrameDataUri) {
+              console.error("Failed to capture video frame for icebreaker.");
+              toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not capture a video frame. Starting with a default question.' });
+              return defaultQuestion;
           }
 
-          recognition.onend = () => {
-            // Only restart if we are in a listening state and it was not an intentional stop
-            if (shouldBeListening.current) {
-              console.log('Speech recognition service disconnected, attempting to restart.');
-              try { recognition.start(); } catch(e) { console.error("Could not restart recognition", e)}
-            }
-          };
+          try {
+              const result = await generateIceBreakerQuestion({
+                  candidateName: greetingName,
+                  videoFrameDataUri,
+                  language: langName
+              });
+              return result.question;
+          } catch (aiError) {
+              console.error("Ice breaker generation failed:", aiError);
+              toast({ variant: 'destructive', title: 'Icebreaker Error', description: 'Could not generate a welcome question. Starting with a default.' });
+              return defaultQuestion;
+          }
 
-        } else {
-            toast({variant: 'destructive', title: 'Browser Not Supported', description: 'Speech recognition is not supported in this browser.'});
+      } catch (error) {
+          console.error('Error accessing camera:', error);
+          setHasCameraPermission(false);
+          toast({
+              variant: 'destructive',
+              title: 'Camera Access Denied',
+              description: 'Video analysis will be disabled. Proceeding without video-based questions.',
+          });
+          return defaultQuestion;
+      }
+  };
+
+  useEffect(() => {
+    const setupInterview = async () => {
+        const mode = getInterviewMode();
+        if (!mode) {
+            toast({ variant: "destructive", title: "Missing Interview Mode", description: "Please go to the prepare page and select an interview type." });
+            router.push("/prepare");
+            return;
         }
-    }
+        setInterviewMode(mode);
 
-    const setupInterview = async (interviewMode: InterviewMode) => {
+        if (mode === 'voice') {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+              recognitionRef.current = new SpeechRecognition();
+              const recognition = recognitionRef.current;
+              recognition.continuous = true;
+              recognition.interimResults = true;
+              
+              recognition.onresult = (event) => {
+                let finalTranscript = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if(event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    }
+                }
+                if (finalTranscript) {
+                    setTranscript(prev => prev + finalTranscript);
+                }
+              };
+        
+              recognition.onerror = (event) => {
+                toast({variant: 'destructive', title: 'Speech Recognition Error', description: event.error});
+                if (event.error !== 'network' && event.error !== 'no-speech') {
+                    setConversationState('idle');
+                }
+              }
+    
+              recognition.onend = () => {
+                if (shouldBeListening.current) {
+                  console.log('Speech recognition service disconnected, attempting to restart.');
+                  try { recognition.start(); } catch(e) { console.error("Could not restart recognition", e)}
+                }
+              };
+    
+            } else {
+                toast({variant: 'destructive', title: 'Browser Not Supported', description: 'Speech recognition is not supported in this browser.'});
+            }
+        }
+        
         const storedQuestionsData = getQuestions();
         const storedResumeAnalysis = getResumeAnalysis();
         if (!storedQuestionsData || !storedResumeAnalysis) {
@@ -288,81 +352,18 @@ export function InterviewSession() {
         
         const { candidateName, skills, experienceSummary } = storedResumeAnalysis;
         setResumeText(`${skills.join(', ')}\n\n${experienceSummary}`);
-        
         const greetingName = candidateName || "there";
-        const defaultQuestion = `Hello ${greetingName}, I am Tina, welcome to the CareerSpark AI interview prep. To begin, please tell me a little about yourself.`;
         
-        const videoIsEnabled = getVideoPreference();
-        if (interviewMode === 'voice' && videoIsEnabled) {
-             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    setHasCameraPermission(true);
-                    
-                    await new Promise(resolve => {
-                        if (videoRef.current) {
-                            videoRef.current.onloadedmetadata = () => resolve(null);
-                        } else {
-                            resolve(null);
-                        }
-                    });
-
-                    if (initialQuestionGenerated.current) {
-                        setCurrentQuestion(defaultQuestion);
-                        setIsReady(true);
-                        return;
-                    }
-                    initialQuestionGenerated.current = true;
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1500)); 
-                    const videoFrameDataUri = captureVideoFrame();
-
-                    if (videoFrameDataUri) {
-                        try {
-                            const result = await generateIceBreakerQuestion({ 
-                                candidateName: greetingName,
-                                videoFrameDataUri, 
-                                language: langName 
-                            });
-                            setCurrentQuestion(result.question);
-                        } catch (aiError) {
-                            console.error("Ice breaker generation failed:", aiError);
-                            toast({ variant: 'destructive', title: 'Icebreaker Error', description: 'Could not generate a welcome question. Starting with a default.' });
-                            setCurrentQuestion(defaultQuestion);
-                        }
-                    } else {
-                         console.error("Failed to capture video frame for icebreaker.");
-                         toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not capture a video frame. Starting with a default question.' });
-                         setCurrentQuestion(defaultQuestion);
-                    }
-                } else {
-                     setHasCameraPermission(false);
-                     setCurrentQuestion(defaultQuestion);
-                }
-            } catch (error) {
-                console.error('Error accessing camera:', error);
-                setHasCameraPermission(false);
-                toast({
-                    variant: 'destructive',
-                    title: 'Camera Access Denied',
-                    description: 'Video analysis will be disabled. Proceeding without video-based questions.',
-                });
-                setCurrentQuestion(defaultQuestion);
-            }
-        } else {
-            setHasCameraPermission(false);
-            setCurrentQuestion(defaultQuestion);
-        }
-
+        const initialQuestion = await getInitialQuestion(mode, langName, greetingName);
+        setCurrentQuestion(initialQuestion);
+        
         setIsReady(true);
     };
 
-    setupInterview(mode);
+    setupInterview();
 
     return () => {
-      shouldBeListening.current = false; // Ensure it doesn't try to restart on unmount
+      shouldBeListening.current = false;
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
@@ -381,7 +382,6 @@ export function InterviewSession() {
     if (!text) return;
 
     setConversationLog(prev => {
-        // Prevent duplicate AI messages in the log
         if(prev[prev.length - 1]?.speaker === 'ai' && prev[prev.length - 1]?.text === text) return prev;
         return [...prev, { speaker: 'ai', text }];
     });
@@ -413,8 +413,6 @@ export function InterviewSession() {
   }
 
   useEffect(() => {
-    // This effect runs when the component first loads and gets the initial question,
-    // or when the AI generates a new question after a user's turn.
     if (currentQuestion && (conversationState === 'loading' || conversationState === 'thinking' || conversationState === 'finished')) {
       speak(currentQuestion);
     }
@@ -569,5 +567,3 @@ export function InterviewSession() {
     </div>
   );
 }
-
-    
