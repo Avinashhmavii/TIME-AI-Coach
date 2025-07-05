@@ -421,17 +421,13 @@ export function InterviewSession() {
             </Avatar>
             )}
             <h1 className="text-2xl font-bold font-headline mt-4">{jobRole}</h1>
-            {interviewMode === 'voice' && getVideoPreference() ? (
-                <div className="flex items-center justify-center gap-2 mt-1 text-muted-foreground">
-                    <Avatar className="w-5 h-5">
-                        <AvatarImage src={`https://logo.clearbit.com/${company.toLowerCase().replace(/\s/g, '')}.com`} alt={company} />
-                        <AvatarFallback>{company.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <span>{company}</span>
-                </div>
-            ) : (
-                <p className="text-muted-foreground">{company}</p>
-            )}
+            <div className="flex items-center justify-center gap-2 mt-1 text-muted-foreground">
+                <Avatar className="w-5 h-5">
+                    <AvatarImage src={`https://logo.clearbit.com/${company.toLowerCase().replace(/\s/g, '')}.com`} alt={company} />
+                    <AvatarFallback>{company.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <span>{company}</span>
+            </div>
         </div>
 
         <div className="space-y-4 my-6">
@@ -470,7 +466,7 @@ export function InterviewSession() {
 
       {/* Right Panel */}
       <div className="md:col-span-2 bg-white rounded-2xl shadow-lg p-6 flex flex-col overflow-hidden">
-        <h2 className="text-2xl font-headline mb-4 border-b pb-2">Interview Transcript</h2>
+        <h2 className="text-2xl font-headline mb-4 border-b pb-2 flex-shrink-0">Interview Transcript</h2>
         <ScrollArea className="flex-grow pr-4 -mr-4">
             <div className="space-y-6" ref={scrollAreaRef}>
                 {conversationLog.map((entry, index) => (
@@ -506,7 +502,7 @@ export function InterviewSession() {
             </div>
         </ScrollArea>
         {(interviewMode === 'text' || interviewMode === 'voice') && conversationState !== 'finished' && (
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-4 flex items-center gap-2 flex-shrink-0">
                 <Textarea 
                     placeholder={interviewMode === 'voice' 
                         ? (isMuted ? "Mic is muted. You can type your answer." : "Listening...") 
