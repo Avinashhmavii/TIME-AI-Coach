@@ -12,13 +12,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { Loader, Mic, ArrowRight, Volume2, ThumbsUp, Lightbulb, BarChart, Smile, Video, BrainCircuit } from "lucide-react";
+import { Loader, Mic, ArrowRight, Volume2, ThumbsUp, Lightbulb, BarChart, Smile, Video, BrainCircuit, Sparkles, MicOff, PhoneOff, VolumeX } from "lucide-react";
 import Link from "next/link";
 import { Textarea } from "./ui/textarea";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { ScrollArea } from "./ui/scroll-area";
 
 type Feedback = Omit<InterviewAgentOutput, 'nextQuestion' | 'isInterviewOver'>;
 type ConversationState = 'loading' | 'speaking' | 'listening' | 'thinking' | 'finished' | 'idle';
+type ConversationEntry = {
+  speaker: 'ai' | 'user';
+  text: string;
+};
 
 const languageCodeMap: Record<string, string> = {
   "English": "en-US",
@@ -35,13 +41,17 @@ const getLanguageCode = (languageName: string) => {
 
 export function InterviewSession() {
   const [interviewMode, setInterviewMode] = useState<InterviewMode | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [transcript, setTranscript] = useState("");
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [interviewData, setInterviewData] = useState<InterviewData[]>([]);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [conversationState, setConversationState] = useState<ConversationState>('loading');
   
+  const [conversationLog, setConversationLog] = useState<ConversationEntry[]>([]);
+  const [time, setTime] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
+
   const conversationStateRef = useRef(conversationState);
   useEffect(() => {
     conversationStateRef.current = conversationState;
@@ -61,6 +71,36 @@ export function InterviewSession() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const initialQuestionGenerated = useRef(false);
   const submitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+        scrollAreaRef.current.parentElement!.scrollTo({ top: scrollAreaRef.current.parentElement!.scrollHeight, behavior: 'smooth' });
+    }
+  }, [conversationLog]);
+
+  useEffect(() => {
+      if (conversationState !== 'loading' && conversationState !== 'finished') {
+          const timerId = setInterval(() => {
+              setTime(t => t + 1);
+          }, 1000);
+          return () => clearInterval(timerId);
+      }
+  }, [conversationState]);
+
+  useEffect(() => {
+    if (interviewMode !== 'voice' || !recognitionRef.current) return;
+
+    if (isMuted) {
+        if (conversationStateRef.current === 'listening') {
+            recognitionRef.current.stop();
+        }
+    } else {
+        if (conversationStateRef.current === 'listening') {
+            recognitionRef.current.start();
+        }
+    }
+  }, [isMuted]);
 
   const captureVideoFrame = (): string | undefined => {
       if (!hasCameraPermission || !videoRef.current || !canvasRef.current) {
@@ -77,6 +117,18 @@ export function InterviewSession() {
       }
       return undefined;
   }
+  
+  const endInterview = () => {
+    setConversationState('finished');
+    saveInterviewSummary(interviewData);
+    router.push('/summary');
+  }
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${secs}`;
+  }
 
   const handleSubmit = async () => {
     if (!transcript.trim() || conversationStateRef.current === 'thinking') {
@@ -85,8 +137,6 @@ export function InterviewSession() {
 
     if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     
-    // Change state to 'thinking' BEFORE stopping recognition.
-    // This prevents the 'onend' handler from incorrectly restarting it.
     setConversationState('thinking');
     if (recognitionRef.current) {
         recognitionRef.current.stop();
@@ -96,6 +146,7 @@ export function InterviewSession() {
 
     try {
       const currentAnswer = transcript.trim();
+      setConversationLog(prev => [...prev, { speaker: 'user', text: currentAnswer }]);
       
       const result = await interviewAgent({
         jobRole,
@@ -114,8 +165,6 @@ export function InterviewSession() {
         visualFeedback: result.visualFeedback
       };
       
-      setFeedback(newFeedback);
-      
       const newInterviewData = [...interviewData, {
         question: currentQuestion!,
         answer: currentAnswer,
@@ -127,14 +176,9 @@ export function InterviewSession() {
         setConversationState('finished');
         saveInterviewSummary(newInterviewData);
         setCurrentQuestion(result.nextQuestion);
-        if (interviewMode === 'voice' && 'speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(result.nextQuestion);
-            utterance.lang = language;
-            window.speechSynthesis.speak(utterance);
-        }
       } else {
         setTranscript("");
-        setCurrentQuestion(result.nextQuestion); // This will trigger the useEffect to speak
+        setCurrentQuestion(result.nextQuestion);
       }
 
     } catch (error) {
@@ -178,8 +222,10 @@ export function InterviewSession() {
                     finalTranscript += event.results[i][0].transcript + ' ';
                 }
             }
-            setTranscript(prev => prev + finalTranscript);
-            startSubmissionTimer();
+            if (finalTranscript) {
+                setTranscript(prev => prev + finalTranscript);
+                startSubmissionTimer();
+            }
           };
     
           recognitionRef.current.onerror = (event) => {
@@ -188,9 +234,7 @@ export function InterviewSession() {
           }
 
           recognitionRef.current.onend = () => {
-            // If recognition stops and we're supposed to be listening, restart it.
-            // This handles cases where the browser might automatically stop recognition after a long pause.
-            if (conversationStateRef.current === 'listening') {
+            if (conversationStateRef.current === 'listening' && !isMuted) {
               console.log('Speech recognition service disconnected, attempting to restart.');
               recognitionRef.current?.start();
             }
@@ -219,46 +263,33 @@ export function InterviewSession() {
         setCompany(storedQuestionsData.company);
         setResumeText(`${storedResumeAnalysis.skills.join(', ')}\n\n${storedResumeAnalysis.experienceSummary}`);
         
-        if (interviewMode === 'text') {
-            setHasCameraPermission(false);
-            setCurrentQuestion("Tell me about yourself.");
-            setConversationState('idle');
-            return;
-        }
+        let initialQuestion = "Tell me about yourself.";
 
         const videoIsEnabled = getVideoPreference();
-        if (!videoIsEnabled) {
-            setHasCameraPermission(false);
-            setCurrentQuestion("Tell me about yourself.");
-            // No return here, we still want to speak the first question
-        } else {
-            try {
+        if (interviewMode === 'voice' && videoIsEnabled) {
+             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 setHasCameraPermission(true);
 
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
-                    videoRef.current.oncanplay = async () => {
-                        if (initialQuestionGenerated.current) return;
+                    await new Promise(resolve => {
+                        videoRef.current!.oncanplay = resolve;
+                    });
+
+                    if (!initialQuestionGenerated.current) {
                         initialQuestionGenerated.current = true;
-                        
                         await new Promise(resolve => setTimeout(resolve, 500));
-                        
                         const videoFrameDataUri = captureVideoFrame();
                         if (videoFrameDataUri) {
                             try {
                                 const result = await generateIceBreakerQuestion({ videoFrameDataUri, language: langName });
-                                setCurrentQuestion(result.question);
+                                initialQuestion = result.question;
                             } catch (aiError) {
                                 console.error("Ice breaker generation failed:", aiError);
-                                setCurrentQuestion("Tell me about yourself.");
                             }
-                        } else {
-                            setCurrentQuestion("Tell me about yourself.");
                         }
-                    };
-                } else {
-                    setCurrentQuestion("Tell me about yourself.");
+                    }
                 }
             } catch (error) {
                 console.error('Error accessing camera:', error);
@@ -266,15 +297,14 @@ export function InterviewSession() {
                 toast({
                     variant: 'destructive',
                     title: 'Camera Access Denied',
-                    description: 'Video analysis will be disabled. The interview will start with a generic question.',
+                    description: 'Video analysis will be disabled.',
                 });
-                setCurrentQuestion("Tell me about yourself.");
             }
+        } else {
+            setHasCameraPermission(false);
         }
 
-        if (!currentQuestion && !initialQuestionGenerated.current) {
-            setCurrentQuestion("Tell me about yourself.");
-        }
+        setCurrentQuestion(initialQuestion);
     }
 
     setupInterview(mode);
@@ -285,6 +315,7 @@ export function InterviewSession() {
         stream.getTracks().forEach(track => track.stop());
       }
       if (recognitionRef.current) {
+        recognitionRef.current.onend = null;
         recognitionRef.current.stop();
       }
       if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
@@ -293,7 +324,21 @@ export function InterviewSession() {
   }, []);
   
   const speak = (text: string) => {
-    if (interviewMode !== 'voice' || !text) return;
+    if (!text) return;
+
+    setConversationLog(prev => {
+        if(prev[prev.length - 1]?.text === text) return prev;
+        return [...prev, { speaker: 'ai', text }];
+    });
+
+    if (interviewMode !== 'voice' || isSpeakerMuted) {
+        setConversationState(conversationStateRef.current === 'finished' ? 'finished' : (interviewMode === 'voice' ? 'listening' : 'idle'));
+        if(interviewMode === 'voice' && recognitionRef.current && !isMuted) {
+            recognitionRef.current.start();
+        }
+        return;
+    }
+    
     if ('speechSynthesis' in window) {
       setConversationState('speaking');
       window.speechSynthesis.cancel();
@@ -302,8 +347,7 @@ export function InterviewSession() {
       utterance.onend = () => {
         if (conversationStateRef.current !== 'finished') {
             setConversationState('listening');
-            if (recognitionRef.current) {
-                setFeedback(null);
+            if (recognitionRef.current && !isMuted) {
                 setTranscript("");
                 recognitionRef.current.start();
             }
@@ -314,171 +358,127 @@ export function InterviewSession() {
   }
 
   useEffect(() => {
-    if (currentQuestion && (conversationState === 'loading' || conversationState === 'thinking')) {
-      if (interviewMode === 'voice') {
-        speak(currentQuestion);
-      } else {
-        setConversationState('idle');
-      }
+    if (currentQuestion && (conversationState === 'loading' || conversationState === 'thinking' || conversationState === 'finished')) {
+      speak(currentQuestion);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion]);
 
 
   if (conversationState === 'loading' && !currentQuestion) {
-    return <div className="flex justify-center items-center h-64"><Loader className="animate-spin mr-2" /> Preparing your interview...</div>;
-  }
-  
-  if(conversationState === 'finished') {
-    return (
-      <Card className="max-w-2xl mx-auto text-center">
-        <CardHeader>
-          <CardTitle className="font-headline text-3xl">Interview Complete!</CardTitle>
-          <CardDescription>{currentQuestion}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-6">You've successfully completed the mock interview. Well done! You can now view your detailed performance summary.</p>
-          <Button asChild size="lg">
-            <Link href="/summary">
-              <span className="inline-flex items-center gap-2">View Summary <ArrowRight /></span>
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const renderInputs = () => {
-    if (interviewMode === 'voice') {
-        return (
-            <Textarea
-                placeholder="Your spoken answer will appear here. You can edit it if needed."
-                value={transcript}
-                onChange={(e) => {
-                    setTranscript(e.target.value);
-                    startSubmissionTimer();
-                }}
-                className="min-h-[150px] text-base"
-                disabled={conversationState !== 'listening'}
-            />
-        )
-    }
-    if (interviewMode === 'text') {
-        return (
-            <div className="space-y-4">
-                <Textarea
-                    placeholder="Type your answer here."
-                    value={transcript}
-                    onChange={(e) => setTranscript(e.target.value)}
-                    className="min-h-[150px] text-base"
-                    disabled={conversationState === 'thinking'}
-                />
-                <Button onClick={handleSubmit} disabled={conversationState === 'thinking' || !transcript.trim()} className="w-full">
-                    {conversationState === 'thinking' ? <span className="flex items-center justify-center"><Loader className="animate-spin mr-2" />Thinking...</span> : "Submit Answer"}
-                </Button>
-            </div>
-        )
-    }
-    return null;
+    return <div className="flex justify-center items-center h-screen"><Loader className="animate-spin mr-2" /> Preparing your interview...</div>;
   }
 
   return (
-    <div className="grid md:grid-cols-2 gap-8 items-start">
+    <div className="grid grid-cols-1 md:grid-cols-3 h-screen p-4 md:p-8 gap-8">
+      {/* Left Panel */}
+      <div className="md:col-span-1 bg-white rounded-2xl shadow-lg p-6 flex flex-col justify-between text-center">
         <div className="space-y-4">
-            {interviewMode === 'voice' && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline flex items-center gap-2"><Video /> Video Feed</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="aspect-video bg-muted rounded-md overflow-hidden relative">
-                            <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
-                            <canvas ref={canvasRef} className="hidden" />
-                            {hasCameraPermission === false && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                                    <Alert variant="destructive" className="w-4/5">
-                                        <AlertTitle>Video Disabled</AlertTitle>
-                                        <AlertDescription>
-                                            Camera is disabled or access was denied.
-                                        </AlertDescription>
-                                    </Alert>
-                                </div>
-                            )}
-                            {hasCameraPermission === null && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <Loader className="animate-spin text-primary" />
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {feedback && (
-                <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Your Feedback</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="flex items-start gap-4">
-                        <div className="bg-secondary p-2 rounded-full"><ThumbsUp className="text-primary"/></div>
-                        <div>
-                            <h4 className="font-semibold">Content</h4>
-                            <p className="text-muted-foreground">{feedback.contentFeedback}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                        <div className="bg-secondary p-2 rounded-full"><Lightbulb className="text-primary"/></div>
-                        <div>
-                            <h4 className="font-semibold">Clarity</h4>
-                            <p className="text-muted-foreground">{feedback.clarityFeedback}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                        <div className="bg-secondary p-2 rounded-full"><BarChart className="text-primary"/></div>
-                        <div>
-                            <h4 className="font-semibold">Tone</h4>
-                            <p className="text-muted-foreground">{feedback.toneFeedback}</p>
-                        </div>
-                    </div>
-                    {feedback.visualFeedback && (
-                        <div className="flex items-start gap-4">
-                            <div className="bg-secondary p-2 rounded-full"><Smile className="text-primary"/></div>
-                            <div>
-                                <h4 className="font-semibold">Visuals</h4>
-                                <p className="text-muted-foreground">{feedback.visualFeedback}</p>
-                            </div>
-                        </div>
-                    )}
-                </CardContent>
-                </Card>
-            )}
+          <Avatar className="w-24 h-24 mx-auto border-4 border-gray-100">
+             <AvatarImage src={`https://logo.clearbit.com/${company.toLowerCase().replace(/\s/g, '')}.com`} alt={company} />
+            <AvatarFallback className="bg-primary text-primary-foreground">
+                <Sparkles className="w-10 h-10" />
+            </AvatarFallback>
+          </Avatar>
+          <h1 className="text-2xl font-bold font-headline">{jobRole}</h1>
+          <p className="text-muted-foreground">{company}</p>
         </div>
 
-        <div className="space-y-4 sticky top-8">
-            <p className="text-center text-muted-foreground">Language: {languageName}</p>
-             <Card className={cn(
-                "transition-all duration-300",
-                conversationState === 'listening' && 'border-primary ring-2 ring-primary/50',
-                conversationState === 'thinking' && 'border-amber-400 ring-2 ring-amber-400/50',
-                conversationState === 'speaking' && 'border-blue-400 ring-2 ring-blue-400/50'
-            )}>
-                <CardHeader>
-                    <CardTitle className="font-headline text-2xl flex items-center gap-2 min-h-[2rem]">
-                        {interviewMode === 'voice' && conversationState === 'speaking' && <><Volume2 className="text-primary" /><span>Interviewer speaking...</span></>}
-                        {interviewMode === 'voice' && conversationState === 'listening' && <><Mic className="text-red-500 animate-pulse" /><span>Listening...</span></>}
-                        {interviewMode === 'voice' && conversationState === 'thinking' && <><BrainCircuit className="text-primary animate-pulse" /><span>Analyzing...</span></>}
-                        {interviewMode === 'text' || ['idle', 'loading', 'finished'].includes(conversationState) && <span>Interviewer:</span>}
-                    </CardTitle>
-                    <CardDescription className="text-lg text-foreground min-h-[5rem]">
-                        {conversationState === 'loading' ? <Loader className="animate-spin" /> : currentQuestion}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {renderInputs()}
-                </CardContent>
-            </Card>
+        <div className="space-y-4">
+            <div className="w-full h-12 flex items-center justify-center">
+                {conversationState === 'listening' ? (
+                     <div className="w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse"></div>
+                ) : (
+                    <div className="w-full h-px bg-gray-200"></div>
+                )}
+            </div>
+          <p className="text-lg font-mono text-muted-foreground">{formatTime(time)}</p>
         </div>
+
+        <div className="flex justify-center items-center gap-4">
+            {interviewMode === 'voice' ? (
+                <>
+                <Button size="icon" variant="ghost" className="rounded-full w-16 h-16 bg-gray-100 hover:bg-gray-200" onClick={() => setIsMuted(prev => !prev)}>
+                    {isMuted ? <MicOff className="w-6 h-6"/> : <Mic className="w-6 h-6"/>}
+                    <span className="sr-only">Mute</span>
+                </Button>
+                <Button size="lg" variant="destructive" className="rounded-full h-16 px-8" onClick={endInterview}>
+                    <PhoneOff className="w-6 h-6 mr-2"/> End Call
+                </Button>
+                <Button size="icon" variant="ghost" className="rounded-full w-16 h-16 bg-gray-100 hover:bg-gray-200" onClick={() => setIsSpeakerMuted(prev => !prev)}>
+                    {isSpeakerMuted ? <VolumeX className="w-6 h-6"/> : <Volume2 className="w-6 h-6"/>}
+                    <span className="sr-only">Speaker</span>
+                </Button>
+                </>
+            ) : (
+                <Button size="lg" className="w-full" onClick={endInterview}>
+                    End Interview
+                </Button>
+            )}
+        </div>
+      </div>
+
+      {/* Right Panel */}
+      <div className="md:col-span-2 bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+        <h2 className="text-2xl font-headline mb-4 border-b pb-2">Interview Transcript</h2>
+        <ScrollArea className="flex-grow pr-4 -mr-4">
+            <div className="space-y-6" ref={scrollAreaRef}>
+                {conversationLog.map((entry, index) => (
+                    <div key={index} className={cn("flex items-start gap-3", entry.speaker === 'user' ? 'justify-end' : '')}>
+                        {entry.speaker === 'ai' && (
+                             <Avatar className="w-8 h-8 border">
+                                 <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">AI</AvatarFallback>
+                            </Avatar>
+                        )}
+                        <div className={cn(
+                            "rounded-lg px-4 py-3 max-w-[80%] text-sm md:text-base",
+                             entry.speaker === 'ai' ? 'bg-gray-100 text-gray-800 rounded-tl-none' : 'bg-primary text-primary-foreground rounded-tr-none'
+                        )}>
+                            {entry.text}
+                        </div>
+                         {entry.speaker === 'user' && (
+                             <Avatar className="w-8 h-8 border">
+                                <AvatarFallback>U</AvatarFallback>
+                            </Avatar>
+                        )}
+                    </div>
+                ))}
+                 {conversationState === 'thinking' && (
+                    <div className="flex items-start gap-3">
+                        <Avatar className="w-8 h-8 border">
+                             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">AI</AvatarFallback>
+                        </Avatar>
+                         <div className="rounded-lg px-4 py-3 bg-gray-100">
+                            <Loader className="w-5 h-5 animate-spin text-primary"/>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </ScrollArea>
+        {interviewMode === 'text' && conversationState !== 'finished' && (
+            <div className="mt-4 flex items-center gap-2">
+                <Textarea 
+                    placeholder="Type your answer..."
+                    value={transcript}
+                    onChange={(e) => setTranscript(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmit();
+                        }
+                    }}
+                    className="flex-grow"
+                    disabled={conversationState === 'thinking'}
+                />
+                 <Button onClick={handleSubmit} disabled={!transcript.trim() || conversationState === 'thinking'}>
+                    {conversationState === 'thinking' ? <Loader className="w-4 h-4 animate-spin"/> : <ArrowRight className="w-4 h-4"/>}
+                    <span className="sr-only">Submit</span>
+                </Button>
+            </div>
+        )}
+      </div>
+      <canvas ref={canvasRef} className="hidden" />
+      {hasCameraPermission && <video ref={videoRef} className="hidden" autoPlay muted playsInline />}
     </div>
   );
 }
