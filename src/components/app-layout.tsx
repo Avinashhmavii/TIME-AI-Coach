@@ -36,11 +36,11 @@ function AppLayoutInternal({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center justify-between">
             <Logo />
-            <div className="md:hidden">
+            <div className="hidden md:flex">
               <SidebarTrigger />
             </div>
           </div>
@@ -57,7 +57,7 @@ function AppLayoutInternal({ children }: { children: React.ReactNode }) {
                   <Link href={link.href}>
                     <span className="flex items-center gap-2">
                       <link.icon />
-                      <span>{link.label}</span>
+                      <span className="group-data-[state=collapsed]:hidden">{link.label}</span>
                     </span>
                   </Link>
                 </SidebarMenuButton>
