@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { Loader, Mic, ArrowRight, Volume2, ThumbsUp, Lightbulb, BarChart, Smile, Video, BrainCircuit, Sparkles, MicOff, PhoneOff, VolumeX } from "lucide-react";
+import { Loader, Mic, ArrowRight, Volume2, ThumbsUp, Lightbulb, BarChart, Smile, Video, BrainCircuit, Sparkles, MicOff, PhoneOff, VolumeX, VideoOff } from "lucide-react";
 import Link from "next/link";
 import { Textarea } from "./ui/textarea";
 import { cn } from "@/lib/utils";
@@ -407,19 +407,38 @@ export function InterviewSession() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 h-screen p-4 md:p-8 gap-8">
       {/* Left Panel */}
-      <div className="md:col-span-1 bg-white rounded-2xl shadow-lg p-6 flex flex-col justify-between text-center">
-        <div className="space-y-4">
-          <Avatar className="w-24 h-24 mx-auto border-4 border-gray-100">
-             <AvatarImage src={`https://logo.clearbit.com/${company.toLowerCase().replace(/\s/g, '')}.com`} alt={company} />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-                <Sparkles className="w-10 h-10" />
-            </AvatarFallback>
-          </Avatar>
-          <h1 className="text-2xl font-bold font-headline">{jobRole}</h1>
-          <p className="text-muted-foreground">{company}</p>
+      <div className="md:col-span-1 bg-white rounded-2xl shadow-lg p-6 flex flex-col text-center">
+        <div className="flex-1 flex flex-col justify-center">
+            {interviewMode === 'voice' && getVideoPreference() ? (
+            <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden shadow-inner flex items-center justify-center relative">
+                <video ref={videoRef} className={cn("w-full h-full object-cover", hasCameraPermission ? 'block' : 'hidden')} autoPlay muted playsInline />
+                {hasCameraPermission === null && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/80">
+                    <Loader className="w-8 h-8 mx-auto mb-2 animate-spin" />
+                    <p className="text-sm font-semibold">Starting camera...</p>
+                </div>
+                )}
+                {hasCameraPermission === false && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/80">
+                    <VideoOff className="w-12 h-12 mx-auto mb-2" />
+                    <p className="font-semibold">Camera is off or denied</p>
+                    <p className="text-sm">Video analysis is disabled.</p>
+                </div>
+                )}
+            </div>
+            ) : (
+            <Avatar className="w-24 h-24 mx-auto border-4 border-gray-100">
+                <AvatarImage src={`https://logo.clearbit.com/${company.toLowerCase().replace(/\s/g, '')}.com`} alt={company} />
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                    <Sparkles className="w-10 h-10" />
+                </AvatarFallback>
+            </Avatar>
+            )}
+            <h1 className="text-2xl font-bold font-headline mt-4">{jobRole}</h1>
+            <p className="text-muted-foreground">{company}</p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 my-6">
             <div className="w-full h-12 flex items-center justify-center">
                 {conversationState === 'listening' ? (
                      <div className="w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse"></div>
@@ -516,7 +535,6 @@ export function InterviewSession() {
         )}
       </div>
       <canvas ref={canvasRef} className="hidden" />
-      {hasCameraPermission && <video ref={videoRef} className="hidden" autoPlay muted playsInline />}
     </div>
   );
 }
