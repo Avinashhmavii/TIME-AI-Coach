@@ -285,8 +285,6 @@ export function InterviewSession() {
         setCompany(storedQuestionsData.company);
         setResumeText(`${storedResumeAnalysis.skills.join(', ')}\n\n${storedResumeAnalysis.experienceSummary}`);
         
-        let initialQuestion = "Tell me about yourself.";
-
         const videoIsEnabled = getVideoPreference();
         if (interviewMode === 'voice' && videoIsEnabled) {
              try {
@@ -298,9 +296,9 @@ export function InterviewSession() {
                     
                     // Wait for the video metadata to load to ensure dimensions are available
                     await new Promise(resolve => {
-                        videoRef.current!.onloadedmetadata = () => {
-                           resolve(null);
-                        };
+                        if (videoRef.current) {
+                            videoRef.current.onloadedmetadata = () => resolve(null);
+                        }
                     });
 
                     if (!initialQuestionGenerated.current) {
@@ -312,15 +310,19 @@ export function InterviewSession() {
                         if (videoFrameDataUri) {
                             try {
                                 const result = await generateIceBreakerQuestion({ videoFrameDataUri, language: langName });
-                                initialQuestion = result.question;
+                                setCurrentQuestion(result.question);
                             } catch (aiError) {
                                 console.error("Ice breaker generation failed:", aiError);
                                 toast({ variant: 'destructive', title: 'Icebreaker Error', description: 'Could not generate a welcome question. Starting with a default.' });
+                                setCurrentQuestion("Tell me about yourself.");
                             }
                         } else {
                              console.error("Failed to capture video frame for icebreaker.");
                              toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not capture a video frame. Starting with a default question.' });
+                             setCurrentQuestion("Tell me about yourself.");
                         }
+                    } else {
+                        setCurrentQuestion("Tell me about yourself.");
                     }
                 }
             } catch (error) {
@@ -331,12 +333,13 @@ export function InterviewSession() {
                     title: 'Camera Access Denied',
                     description: 'Video analysis will be disabled.',
                 });
+                setCurrentQuestion("Tell me about yourself.");
             }
         } else {
             setHasCameraPermission(false);
+            setCurrentQuestion("Tell me about yourself.");
         }
 
-        setCurrentQuestion(initialQuestion);
         setIsReady(true);
     }
 
@@ -550,3 +553,5 @@ export function InterviewSession() {
     </div>
   );
 }
+
+    
