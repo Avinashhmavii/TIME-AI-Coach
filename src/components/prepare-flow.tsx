@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { analyzeResume, type AnalyzeResumeOutput } from "@/ai/flows/resume-analyzer";
 import { generateRoleSpecificQuestions, type GenerateRoleSpecificQuestionsOutput } from "@/ai/flows/interview-question-generator";
+import { validateInput } from "@/ai/flows/input-validator";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -153,7 +154,30 @@ export function PrepareFlow() {
         return;
     }
     setIsLoading(true);
+    jobDetailsForm.clearErrors();
+
     try {
+        // Validate inputs for inappropriate content
+        const [jobRoleValidation, companyValidation] = await Promise.all([
+            validateInput({ text: data.jobRole }),
+            validateInput({ text: data.company })
+        ]);
+
+        let hasError = false;
+        if (!jobRoleValidation.isValid) {
+            jobDetailsForm.setError("jobRole", { type: "manual", message: jobRoleValidation.reason || "This job role is not allowed." });
+            hasError = true;
+        }
+
+        if (!companyValidation.isValid) {
+            jobDetailsForm.setError("company", { type: "manual", message: companyValidation.reason || "This company name is not allowed." });
+            hasError = true;
+        }
+
+        if (hasError) {
+            return; // Finally block will handle isLoading
+        }
+
         const generatedQuestions = await generateRoleSpecificQuestions({
             jobRole: data.jobRole,
             company: data.company,
@@ -166,8 +190,8 @@ export function PrepareFlow() {
     } catch (error) {
         toast({
             variant: "destructive",
-            title: "Error Generating Questions",
-            description: error instanceof Error ? error.message : "An unknown error occurred.",
+            title: "Error During Preparation",
+            description: error instanceof Error ? error.message : "An unknown error occurred. Please try again.",
         });
     } finally {
         setIsLoading(false);
