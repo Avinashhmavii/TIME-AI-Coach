@@ -72,7 +72,7 @@ export const jobRoles: { value: string; label: string }[] = [
     { value: 'fashion-designer', label: 'Fashion Designer' },
     // Healthcare
     { value: 'registered-nurse', label: 'Registered Nurse (RN)' },
-    { value:f: 'physician', label: 'Physician' },
+    { value: 'physician', label: 'Physician' },
     { value: 'pharmacist', label: 'Pharmacist' },
     { value: 'physical-therapist', label: 'Physical Therapist' },
     { value: 'medical-assistant', label: 'Medical Assistant' },
