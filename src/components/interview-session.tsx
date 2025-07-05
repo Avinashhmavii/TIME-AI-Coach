@@ -77,7 +77,6 @@ export function InterviewSession() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const initialQuestionGenerated = useRef(false);
-  const submitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const shouldBeListening = useRef(false); // Ref to manage intentional listening state
 
@@ -157,8 +156,6 @@ export function InterviewSession() {
     if (!currentAnswer || conversationStateRef.current === 'thinking') {
         return;
     }
-
-    if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     
     setConversationState('thinking');
     
@@ -210,14 +207,6 @@ export function InterviewSession() {
     }
   };
 
-  const startSubmissionTimer = () => {
-      if (interviewMode !== 'voice') return;
-      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
-      submitTimeoutRef.current = setTimeout(() => {
-          handleSubmit();
-      }, 2000); // 2 seconds of silence
-  }
-
   useEffect(() => {
     const mode = getInterviewMode();
     if (!mode) {
@@ -244,7 +233,6 @@ export function InterviewSession() {
             }
             if (finalTranscript) {
                 setTranscript(prev => prev + finalTranscript);
-                startSubmissionTimer();
             }
           };
     
@@ -345,7 +333,6 @@ export function InterviewSession() {
         recognitionRef.current.onend = null;
         recognitionRef.current.stop();
       }
-      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -400,7 +387,6 @@ export function InterviewSession() {
   }
 
   const handleManualSubmit = () => {
-    if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     handleSubmit();
   }
 
@@ -512,12 +498,11 @@ export function InterviewSession() {
         {(interviewMode === 'text' || interviewMode === 'voice') && conversationState !== 'finished' && (
             <div className="mt-4 flex items-center gap-2">
                 <Textarea 
-                    placeholder={interviewMode === 'voice' ? (isMuted ? "Mic is muted" : "Listening...") : "Type your answer..."}
+                    placeholder={interviewMode === 'voice' 
+                        ? (isMuted ? "Mic is muted. You can type your answer." : "Listening...") 
+                        : "Type your answer..."}
                     value={transcript}
-                    onChange={(e) => {
-                        if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
-                        setTranscript(e.target.value)
-                    }}
+                    onChange={(e) => setTranscript(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey && interviewMode === 'text') {
                             e.preventDefault();
@@ -525,7 +510,7 @@ export function InterviewSession() {
                         }
                     }}
                     className="flex-grow"
-                    disabled={conversationState === 'thinking' || (interviewMode === 'voice' && isMuted)}
+                    disabled={conversationState === 'thinking'}
                 />
                  <Button onClick={handleManualSubmit} disabled={!transcript.trim() || conversationState === 'thinking'}>
                     {conversationState === 'thinking' ? <Loader className="w-4 h-4 animate-spin"/> : <ArrowRight className="w-4 h-4"/>}
