@@ -57,6 +57,12 @@ export function InterviewSession() {
   useEffect(() => {
     conversationStateRef.current = conversationState;
   }, [conversationState]);
+  
+  const transcriptRef = useRef("");
+  useEffect(() => {
+    transcriptRef.current = transcript;
+  }, [transcript]);
+
 
   // Data for the AI agent
   const [language, setLanguage] = useState("en-US");
@@ -147,7 +153,8 @@ export function InterviewSession() {
   }
 
   const handleSubmit = async () => {
-    if (!transcript.trim() || conversationStateRef.current === 'thinking') {
+    const currentAnswer = transcriptRef.current.trim();
+    if (!currentAnswer || conversationStateRef.current === 'thinking') {
         return;
     }
 
@@ -158,7 +165,6 @@ export function InterviewSession() {
     const videoFrameDataUri = (interviewMode === 'voice' && hasCameraPermission) ? captureVideoFrame() : undefined;
 
     try {
-      const currentAnswer = transcript.trim();
       setConversationLog(prev => [...prev, { speaker: 'user', text: currentAnswer }]);
       
       const result = await interviewAgent({
@@ -253,7 +259,7 @@ export function InterviewSession() {
             // Only restart if we are in a listening state and it was not an intentional stop
             if (shouldBeListening.current) {
               console.log('Speech recognition service disconnected, attempting to restart.');
-              recognition.start();
+              try { recognition.start(); } catch(e) { console.error("Could not restart recognition", e)}
             }
           };
 
@@ -367,11 +373,12 @@ export function InterviewSession() {
       utterance.onend = () => {
         if (conversationStateRef.current !== 'finished') {
             setConversationState('listening');
-            setTranscript("");
         }
       }
       utterance.onerror = () => {
-        setConversationState(interviewMode === 'voice' ? 'listening' : 'idle');
+        if (conversationStateRef.current !== 'finished') {
+            setConversationState(interviewMode === 'voice' ? 'listening' : 'idle');
+        }
       }
       window.speechSynthesis.speak(utterance);
     }
@@ -385,11 +392,16 @@ export function InterviewSession() {
       speak(currentQuestion);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestion]);
+  }, [currentQuestion, isSpeakerMuted]);
 
 
   if (!isReady) {
     return <div className="flex justify-center items-center h-screen"><Loader className="animate-spin mr-2" /> Preparing your interview...</div>;
+  }
+
+  const handleManualSubmit = () => {
+    if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
+    handleSubmit();
   }
 
   return (
@@ -478,22 +490,25 @@ export function InterviewSession() {
                 )}
             </div>
         </ScrollArea>
-        {interviewMode === 'text' && conversationState !== 'finished' && (
+        {(interviewMode === 'text' || interviewMode === 'voice') && conversationState !== 'finished' && (
             <div className="mt-4 flex items-center gap-2">
                 <Textarea 
-                    placeholder="Type your answer..."
+                    placeholder={interviewMode === 'voice' ? (isMuted ? "Mic is muted" : "Listening...") : "Type your answer..."}
                     value={transcript}
-                    onChange={(e) => setTranscript(e.target.value)}
+                    onChange={(e) => {
+                        if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
+                        setTranscript(e.target.value)
+                    }}
                     onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
+                        if (e.key === 'Enter' && !e.shiftKey && interviewMode === 'text') {
                             e.preventDefault();
-                            handleSubmit();
+                            handleManualSubmit();
                         }
                     }}
                     className="flex-grow"
-                    disabled={conversationState === 'thinking'}
+                    disabled={conversationState === 'thinking' || (interviewMode === 'voice' && isMuted)}
                 />
-                 <Button onClick={handleSubmit} disabled={!transcript.trim() || conversationState === 'thinking'}>
+                 <Button onClick={handleManualSubmit} disabled={!transcript.trim() || conversationState === 'thinking'}>
                     {conversationState === 'thinking' ? <Loader className="w-4 h-4 animate-spin"/> : <ArrowRight className="w-4 h-4"/>}
                     <span className="sr-only">Submit</span>
                 </Button>
