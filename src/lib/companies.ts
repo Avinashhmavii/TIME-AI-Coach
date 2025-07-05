@@ -1,4 +1,5 @@
 export const companies: { value: string; label: string }[] = [
+    { value: 'time4education', label: 'T.I.M.E. (time4education)' },
     // India Unicorns & Top Tech
     { value: 'paytm', label: 'Paytm' },
     { value: 'byjus', label: "Byju's" },
@@ -194,7 +195,6 @@ export const companies: { value: string; label: string }[] = [
     // Media & Entertainment
     { value: 'disney', label: 'The Walt Disney Company' },
     { value: 'comcast', label: 'Comcast' },
-    { value: 'netflix', label: 'Netflix' },
     { value: 'viacom18', label: 'Viacom18' },
     { value: 'zee-entertainment', label: 'Zee Entertainment' },
     { value: 'sony-pictures', label: 'Sony Pictures' },
