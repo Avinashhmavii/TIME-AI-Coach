@@ -40,7 +40,6 @@ const getLanguageCode = (languageName: string) => {
 }
 
 export function InterviewSession() {
-  const [isReady, setIsReady] = useState(false);
   const [interviewMode, setInterviewMode] = useState<InterviewMode | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [transcript, setTranscript] = useState("");
@@ -70,6 +69,7 @@ export function InterviewSession() {
   const [jobRole, setJobRole] = useState("");
   const [company, setCompany] = useState("");
   const [resumeText, setResumeText] = useState("");
+  const [candidateName, setCandidateName] = useState("");
 
   const router = useRouter();
   const { toast } = useToast();
@@ -219,71 +219,60 @@ export function InterviewSession() {
     }
   };
 
-  const getInitialQuestion = async (
-    interviewMode: InterviewMode,
-    langName: string,
-    greetingName: string
-  ): Promise<string> => {
-      const defaultQuestion = `Hello ${greetingName}, I am Tina, welcome to the CareerSpark AI interview prep. To begin, please tell me a little about yourself.`;
-      const videoIsEnabled = getVideoPreference();
+  const getInitialQuestion = async (): Promise<string> => {
+    const defaultQuestion = `Hello ${candidateName || 'there'}, I am Tina, welcome to the CareerSpark AI interview prep. To make this session as helpful as possible, what area would you like to focus on? We can do behavioral questions, technical questions, dive deeper into your resume, or discuss the company.`;
+    const videoIsEnabled = getVideoPreference();
 
-      if (interviewMode !== 'voice' || !videoIsEnabled) {
-          setHasCameraPermission(false);
-          return defaultQuestion;
+    if (interviewMode !== 'voice' || !videoIsEnabled) {
+      setHasCameraPermission(false);
+      return defaultQuestion;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // This check is now safe because the component has rendered
+      if (!videoRef.current) {
+        stream.getTracks().forEach(track => track.stop());
+        setHasCameraPermission(false);
+        toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not access the video element.' });
+        return defaultQuestion;
+      }
+      
+      videoRef.current.srcObject = stream;
+      setHasCameraPermission(true);
+
+      // Wait for the video to load to prevent capturing a blank frame
+      await new Promise(resolve => {
+        if (videoRef.current) videoRef.current.onloadedmetadata = () => resolve(true);
+      });
+      // Additional small delay to ensure the camera image is stable
+      await new Promise(resolve => setTimeout(resolve, 1500)); 
+
+      const videoFrameDataUri = captureVideoFrame();
+      if (!videoFrameDataUri) {
+        toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not capture a video frame. Starting with a default question.' });
+        return defaultQuestion;
       }
 
-      try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          if (!videoRef.current) {
-              stream.getTracks().forEach(track => track.stop());
-              setHasCameraPermission(false);
-              return defaultQuestion;
-          }
-          
-          videoRef.current.srcObject = stream;
-          setHasCameraPermission(true);
+      const result = await generateIceBreakerQuestion({
+        candidateName: candidateName || 'there',
+        videoFrameDataUri,
+        language: languageName
+      });
+      return result.question;
 
-          await new Promise<void>(resolve => {
-              if (videoRef.current) {
-                  videoRef.current.onloadedmetadata = () => resolve();
-              } else {
-                  resolve();
-              }
-          });
-          
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          const videoFrameDataUri = captureVideoFrame();
-          if (!videoFrameDataUri) {
-              console.error("Failed to capture video frame for icebreaker.");
-              toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not capture a video frame. Starting with a default question.' });
-              return defaultQuestion;
-          }
-
-          try {
-              const result = await generateIceBreakerQuestion({
-                  candidateName: greetingName,
-                  videoFrameDataUri,
-                  language: langName
-              });
-              return result.question;
-          } catch (aiError) {
-              console.error("Ice breaker generation failed:", aiError);
-              toast({ variant: 'destructive', title: 'Icebreaker Error', description: 'Could not generate a welcome question. Starting with a default.' });
-              return defaultQuestion;
-          }
-
-      } catch (error) {
-          console.error('Error accessing camera:', error);
-          setHasCameraPermission(false);
-          toast({
-              variant: 'destructive',
-              title: 'Camera Access Denied',
-              description: 'Video analysis will be disabled. Proceeding without video-based questions.',
-          });
-          return defaultQuestion;
-      }
+    } catch (error) {
+      console.error('Error in getInitialQuestion:', error);
+      setHasCameraPermission(false);
+      toast({
+        variant: 'destructive',
+        title: 'Camera Access Denied',
+        description: 'Please enable camera permissions. Video analysis will be disabled.',
+      });
+      return defaultQuestion;
+    }
   };
+
 
   useEffect(() => {
     const setupInterview = async () => {
@@ -351,13 +340,11 @@ export function InterviewSession() {
         setCompany(storedQuestionsData.company);
         
         const { candidateName, skills, experienceSummary } = storedResumeAnalysis;
+        setCandidateName(candidateName);
         setResumeText(`${skills.join(', ')}\n\n${experienceSummary}`);
-        const greetingName = candidateName || "there";
         
-        const initialQuestion = await getInitialQuestion(mode, langName, greetingName);
+        const initialQuestion = await getInitialQuestion();
         setCurrentQuestion(initialQuestion);
-        
-        setIsReady(true);
     };
 
     setupInterview();
@@ -420,16 +407,21 @@ export function InterviewSession() {
   }, [currentQuestion]);
 
 
-  if (!isReady) {
-    return <div className="flex justify-center items-center h-screen"><Loader className="animate-spin mr-2" /> Preparing your interview...</div>;
-  }
-
   const handleManualSubmit = () => {
     handleSubmit();
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 h-screen p-4 md:p-8 gap-8">
+    <div className="relative grid grid-cols-1 md:grid-cols-3 h-screen p-4 md:p-8 gap-8">
+       {conversationState === 'loading' && (
+        <div className="fixed inset-0 bg-background/90 backdrop-blur-sm flex justify-center items-center z-[100]">
+          <div className="flex items-center text-lg font-semibold text-primary">
+            <Loader className="animate-spin mr-3 h-6 w-6" /> 
+            Preparing your interview...
+          </div>
+        </div>
+      )}
+
       {/* Left Panel */}
       <div className="md:col-span-1 bg-white rounded-2xl shadow-lg p-6 flex flex-col text-center">
         <div className="flex-1 flex flex-col justify-center">
