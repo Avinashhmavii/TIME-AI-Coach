@@ -30,7 +30,7 @@ const InterviewAgentInputSchema = z.object({
 export type InterviewAgentInput = z.infer<typeof InterviewAgentInputSchema>;
 
 const InterviewAgentOutputSchema = z.object({
-  contentFeedback: z.string().describe('Feedback on the content of the response.'),
+  contentFeedback: z.string().describe('Feedback on the content of the response, including how it aligns with the resume.'),
   toneFeedback: z.string().describe('Feedback on the tone of the response.'),
   clarityFeedback: z.string().describe('Feedback on the clarity of the response.'),
   visualFeedback: z.string().describe('Feedback on the visual presentation, like body language and confidence, based on the video frame.'),
@@ -73,15 +73,21 @@ Here is a video frame of the candidate as they answered:
 
 Your tasks are:
 1.  **Analyze and Give Feedback:**
-    -   Provide concise, constructive feedback on the **content**, **tone**, and **clarity** of the candidate's latest answer.
+    -   **Content Feedback:** Critically evaluate the substance of the answer. **Crucially, compare the candidate's claims against their resume.**
+        - If their answer aligns well with their resume, acknowledge that.
+        - If they provide information that seems inconsistent with their resume (e.g., claiming 10 years of experience when the resume shows 5), use the feedback to note the discrepancy and use your follow-up question to probe gently.
+        - Your feedback should be concise and constructive.
+    -   **Tone Feedback:** Comment on the tone of the response (e.g., confident, hesitant, professional).
+    -   **Clarity Feedback:** Comment on how clear and easy to understand the response was.
     {{#if videoFrameDataUri}}
-    -   Based on the video frame, also provide feedback on their **visual presentation** (e.g., body language, eye contact, confidence).
+    -   **Visual Presentation Feedback:** Based on the video frame, also provide feedback on their visual presentation (e.g., body language, eye contact, confidence).
     {{else}}
     -   For visual feedback, state that no video was provided.
     {{/if}}
 2.  **Ask a Follow-up Question:**
-    -   Based on their answer, their resume, and the entire conversation so far, generate a single, relevant follow-up question.
-    -   Make the conversation feel fluid. If their answer was short, probe for more detail. If they mentioned a specific project, ask a question about it.
+    -   Your next question must be a logical continuation of the conversation. It should be directly influenced by their last answer and your analysis of it.
+    -   **If you identified an inconsistency** with the resume, your follow-up question should be a polite probe for more information. For example: "Thanks for sharing that. My understanding from your resume was slightly different, could you help me connect the dots on that experience?"
+    -   If their answer was strong, ask a question that delves deeper into a project or skill they mentioned.
     -   Use conversational transitions, like "That's helpful, thank you. It leads me to my next question..." or "I appreciate you sharing that. On that topic, can you tell me about a time when...".
     -   Do not repeat questions.
 3.  **Conclude Naturally:**
