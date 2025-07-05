@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Combobox } from "./ui/combobox";
 import { jobRoles } from "@/lib/job-roles";
+import { companies } from "@/lib/companies";
 
 // Step 1: Resume Upload
 const resumeSchema = z.object({
@@ -162,12 +163,14 @@ export function PrepareFlow() {
     jobDetailsForm.clearErrors();
 
     const jobRoleLabel = jobRoles.find(role => role.value === data.jobRole)?.label || data.jobRole;
+    const companyLabel = companies.find(c => c.value === data.company)?.label || data.company;
+
 
     try {
         // Validate inputs for inappropriate content
         const [jobRoleValidation, companyValidation] = await Promise.all([
             validateInput({ text: jobRoleLabel }),
-            validateInput({ text: data.company })
+            validateInput({ text: companyLabel })
         ]);
 
         let hasError = false;
@@ -187,12 +190,12 @@ export function PrepareFlow() {
 
         const generatedQuestions = await generateRoleSpecificQuestions({
             jobRole: jobRoleLabel,
-            company: data.company,
+            company: companyLabel,
             language: data.language,
             resumeText: `${resumeAnalysis.skills.join(', ')}\n\n${resumeAnalysis.experienceSummary}`
         });
         setQuestions(generatedQuestions);
-        saveQuestions(generatedQuestions, data.language, jobRoleLabel, data.company);
+        saveQuestions(generatedQuestions, data.language, jobRoleLabel, companyLabel);
         setStep(3);
     } catch (error) {
         toast({
@@ -272,45 +275,55 @@ export function PrepareFlow() {
                 <CardContent>
                 <Form {...jobDetailsForm}>
                     <form onSubmit={jobDetailsForm.handleSubmit(handleJobDetailsSubmit)} className="space-y-6">
-                      <FormField
-                          control={jobDetailsForm.control}
-                          name="jobRole"
-                          render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                              <FormLabel>Job Role</FormLabel>
-                              <FormControl>
-                                <Combobox
-                                    options={jobRoles}
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    placeholder="Select role..."
-                                    searchPlaceholder="Search roles..."
-                                    emptyPlaceholder="No role found."
-                                />
-                              </FormControl>
-                              <FormMessage />
-                          </FormItem>
-                          )}
-                      />
-                      <FormField
-                          control={jobDetailsForm.control}
-                          name="company"
-                          render={({ field }) => (
-                          <FormItem>
-                              <FormLabel>Company</FormLabel>
-                              <div className="flex items-center gap-4">
-                                <Avatar>
-                                    <AvatarImage src={watchedCompany ? `https://logo.clearbit.com/${watchedCompany.toLowerCase().replace(/\s/g, '')}.com` : undefined} alt={watchedCompany} />
-                                    <AvatarFallback>{watchedCompany ? watchedCompany.charAt(0).toUpperCase() : ""}</AvatarFallback>
-                                </Avatar>
-                                <FormControl>
-                                  <Input placeholder="e.g., Google" {...field} />
-                                </FormControl>
-                              </div>
-                              <FormMessage />
-                          </FormItem>
-                          )}
-                      />
+                       <div className="grid sm:grid-cols-2 gap-4">
+                            <FormField
+                                control={jobDetailsForm.control}
+                                name="company"
+                                render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Company</FormLabel>
+                                    <div className="flex items-center gap-2">
+                                        <Avatar className="w-8 h-8">
+                                            <AvatarImage src={watchedCompany ? `https://logo.clearbit.com/${(companies.find(c => c.value === watchedCompany)?.label || watchedCompany).toLowerCase().replace(/\s/g, '')}.com` : undefined} alt={watchedCompany} />
+                                            <AvatarFallback>{watchedCompany ? watchedCompany.charAt(0).toUpperCase() : "?"}</AvatarFallback>
+                                        </Avatar>
+                                        <FormControl>
+                                            <Combobox
+                                                options={companies}
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                placeholder="Select or type..."
+                                                searchPlaceholder="Search companies..."
+                                                emptyPlaceholder="No company found."
+                                                creatable={true}
+                                            />
+                                        </FormControl>
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={jobDetailsForm.control}
+                                name="jobRole"
+                                render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Job Role</FormLabel>
+                                    <FormControl>
+                                        <Combobox
+                                            options={jobRoles}
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                            placeholder="Select role..."
+                                            searchPlaceholder="Search roles..."
+                                            emptyPlaceholder="No role found."
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                       </div>
                       <FormField
                         control={jobDetailsForm.control}
                         name="language"

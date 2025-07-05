@@ -31,6 +31,7 @@ type ComboboxProps = {
   placeholder?: string
   searchPlaceholder?: string
   emptyPlaceholder?: string
+  creatable?: boolean
 }
 
 export function Combobox({ 
@@ -39,9 +40,23 @@ export function Combobox({
     onChange,
     placeholder = "Select an option...",
     searchPlaceholder = "Search...",
-    emptyPlaceholder = "No results found."
+    emptyPlaceholder = "No results found.",
+    creatable = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState("")
+
+  const handleSelect = (currentValue: string) => {
+      onChange(currentValue === value ? "" : currentValue)
+      setOpen(false)
+  }
+  
+  const handleCreate = () => {
+    onChange(search)
+    setOpen(false)
+  }
+
+  const displayedValue = options.find((option) => option.value === value)?.label || value
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -50,28 +65,37 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between font-normal"
         >
-          {value
-            ? options.find((option) => option.value === value)?.label
-            : placeholder}
+          <span className="truncate">
+            {value ? displayedValue : placeholder}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command>
+        <Command onValueChange={setSearch} filter={(value, search) => {
+            const label = options.find(o => o.value === value)?.label ?? ''
+            if (label.toLowerCase().includes(search.toLowerCase())) return 1
+            return 0
+        }}>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
-            <CommandEmpty>{emptyPlaceholder}</CommandEmpty>
+            <CommandEmpty>
+                {creatable && search.length > 0 ? (
+                    <CommandItem onSelect={handleCreate}>
+                        Use "{search}"
+                    </CommandItem>
+                ) : (
+                    emptyPlaceholder
+                )}
+            </CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                  }}
+                  onSelect={handleSelect}
                 >
                   <Check
                     className={cn(
