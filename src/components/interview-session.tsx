@@ -73,6 +73,7 @@ export function InterviewSession() {
   const initialQuestionGenerated = useRef(false);
   const submitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const shouldBeListening = useRef(false); // Ref to manage intentional listening state
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -90,18 +91,32 @@ export function InterviewSession() {
   }, [conversationState]);
 
   useEffect(() => {
-    if (interviewMode !== 'voice' || !recognitionRef.current) return;
+    // This effect is the single source of truth for starting/stopping speech recognition
+    const recognition = recognitionRef.current;
+    if (!recognition || interviewMode !== 'voice') return;
+    
+    const startRecognition = () => {
+      try {
+        recognition.start();
+      } catch (e) {
+        // It might already be started if onend fired unexpectedly. This is a safe way to handle it.
+        if (e instanceof DOMException && e.name === 'InvalidStateError') {
+          console.log('Recognition already started.');
+        } else {
+          console.error('Could not start recognition:', e);
+        }
+      }
+    };
 
-    if (isMuted) {
-        if (conversationStateRef.current === 'listening') {
-            recognitionRef.current.stop();
-        }
+    if (conversationState === 'listening' && !isMuted) {
+      shouldBeListening.current = true;
+      startRecognition();
     } else {
-        if (conversationStateRef.current === 'listening') {
-            recognitionRef.current.start();
-        }
+      shouldBeListening.current = false;
+      recognition.stop();
     }
-  }, [isMuted]);
+  }, [conversationState, isMuted, interviewMode]);
+
 
   const captureVideoFrame = (): string | undefined => {
       if (!hasCameraPermission || !videoRef.current || !canvasRef.current) {
@@ -139,10 +154,7 @@ export function InterviewSession() {
     if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     
     setConversationState('thinking');
-    if (recognitionRef.current) {
-        recognitionRef.current.stop();
-    }
-
+    
     const videoFrameDataUri = (interviewMode === 'voice' && hasCameraPermission) ? captureVideoFrame() : undefined;
 
     try {
@@ -174,9 +186,9 @@ export function InterviewSession() {
       setInterviewData(newInterviewData);
 
       if (result.isInterviewOver) {
-        setConversationState('finished');
         saveInterviewSummary(newInterviewData);
         setCurrentQuestion(result.nextQuestion);
+        setConversationState('finished');
       } else {
         setTranscript("");
         setCurrentQuestion(result.nextQuestion);
@@ -213,10 +225,11 @@ export function InterviewSession() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
           recognitionRef.current = new SpeechRecognition();
-          recognitionRef.current.continuous = true;
-          recognitionRef.current.interimResults = true;
+          const recognition = recognitionRef.current;
+          recognition.continuous = true;
+          recognition.interimResults = true;
           
-          recognitionRef.current.onresult = (event) => {
+          recognition.onresult = (event) => {
             let finalTranscript = "";
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if(event.results[i].isFinal) {
@@ -229,15 +242,18 @@ export function InterviewSession() {
             }
           };
     
-          recognitionRef.current.onerror = (event) => {
+          recognition.onerror = (event) => {
             toast({variant: 'destructive', title: 'Speech Recognition Error', description: event.error});
-            setConversationState('idle');
+            if (event.error !== 'network' && event.error !== 'no-speech') {
+                setConversationState('idle');
+            }
           }
 
-          recognitionRef.current.onend = () => {
-            if (conversationStateRef.current === 'listening' && !isMuted) {
+          recognition.onend = () => {
+            // Only restart if we are in a listening state and it was not an intentional stop
+            if (shouldBeListening.current) {
               console.log('Speech recognition service disconnected, attempting to restart.');
-              recognitionRef.current?.start();
+              recognition.start();
             }
           };
 
@@ -312,11 +328,14 @@ export function InterviewSession() {
     setupInterview(mode);
 
     return () => {
+      shouldBeListening.current = false; // Ensure it doesn't try to restart on unmount
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
       if (recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
         recognitionRef.current.onend = null;
         recognitionRef.current.stop();
       }
@@ -333,11 +352,10 @@ export function InterviewSession() {
         return [...prev, { speaker: 'ai', text }];
     });
 
-    if (interviewMode !== 'voice' || isSpeakerMuted) {
-        setConversationState(conversationStateRef.current === 'finished' ? 'finished' : (interviewMode === 'voice' ? 'listening' : 'idle'));
-        if(interviewMode === 'voice' && recognitionRef.current && !isMuted) {
-            recognitionRef.current.start();
-        }
+    const isVoiceMode = getInterviewMode() === 'voice';
+    if (!isVoiceMode || isSpeakerMuted) {
+        const nextState = conversationStateRef.current === 'finished' ? 'finished' : (isVoiceMode ? 'listening' : 'idle');
+        setConversationState(nextState);
         return;
     }
     
@@ -349,18 +367,21 @@ export function InterviewSession() {
       utterance.onend = () => {
         if (conversationStateRef.current !== 'finished') {
             setConversationState('listening');
-            if (recognitionRef.current && !isMuted) {
-                setTranscript("");
-                recognitionRef.current.start();
-            }
+            setTranscript("");
         }
+      }
+      utterance.onerror = () => {
+        setConversationState(interviewMode === 'voice' ? 'listening' : 'idle');
       }
       window.speechSynthesis.speak(utterance);
     }
   }
 
   useEffect(() => {
-    if (currentQuestion && (conversationState === 'loading' || conversationState === 'thinking' || conversationState === 'finished')) {
+    if (currentQuestion && (conversationState === 'loading' || conversationState === 'thinking')) {
+      speak(currentQuestion);
+    } else if (currentQuestion && conversationState === 'finished') {
+      // For the final message, we also want to speak it out.
       speak(currentQuestion);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
