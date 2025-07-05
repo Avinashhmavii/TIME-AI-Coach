@@ -9,7 +9,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {GenerateResponse} from '@genkit-ai/googleai';
 
 const ValidateInputSchema = z.object({
   text: z.string().describe('The text to validate.'),
@@ -18,7 +17,7 @@ export type ValidateInput = z.infer<typeof ValidateInputSchema>;
 
 const ValidateOutputSchema = z.object({
   isValid: z.boolean().describe('Whether the input is valid and appropriate.'),
-  reason: z.string().optional().describe('The reason why the input is not valid.'),
+  reason: z.string().optional().describe("The reason why the input is not valid. Do not repeat the user's input in the reason."),
 });
 export type ValidateOutput = z.infer<typeof ValidateOutputSchema>;
 
@@ -26,56 +25,44 @@ export async function validateInput(input: ValidateInput): Promise<ValidateOutpu
   return validateInputFlow(input);
 }
 
+const prompt = ai.definePrompt({
+    name: 'validateInputPrompt',
+    input: {schema: ValidateInputSchema},
+    output: {schema: ValidateOutputSchema},
+    prompt: `You are a content moderator for a professional career application.
+Your task is to determine if the provided text is appropriate for a 'job role' or 'company name'.
+The text should be professional and not contain any profanity, hate speech, harassment, dangerous, or sexually explicit content.
+
+If the text is appropriate, set 'isValid' to true.
+If the text is inappropriate, set 'isValid' to false and provide a brief, user-friendly 'reason' like "This input is not allowed." or "Input contains inappropriate language.". Do not repeat the user's input in the reason.
+
+Text to validate:
+---
+{{{text}}}
+---
+`,
+});
+
+
 const validateInputFlow = ai.defineFlow(
   {
     name: 'validateInputFlow',
     inputSchema: ValidateInputSchema,
     outputSchema: ValidateOutputSchema,
   },
-  async ({text}) => {
+  async (input) => {
     // Basic check for empty or very short strings
-    if (!text || text.trim().length < 2) {
+    if (!input.text || input.text.trim().length < 2) {
         return { isValid: false, reason: 'Input is too short.' };
     }
 
     try {
-      const llmResponse = await ai.generate({
-        // A simple prompt that includes the text to be validated.
-        // This is to trigger the safety filters if the text is inappropriate.
-        prompt: `Please repeat the following text exactly as it is: "${text}"`,
-        // Request the raw response to inspect safety attributes
-        output: {format: 'raw'},
-        config: {
-            // Use strict safety settings to catch a wide range of inappropriate content.
-            safetySettings: [
-              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_LOW_AND_ABOVE' },
-              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
-              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
-              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_LOW_AND_ABOVE' },
-            ],
-        }
-      });
-      
-      const rawResponse = llmResponse.output as GenerateResponse;
-
-      // Check if the prompt itself was blocked due to safety policies
-      if (rawResponse.promptFeedback?.blockReason === 'SAFETY') {
-        return { isValid: false, reason: `This input is not allowed.` };
-      }
-
-      // Check if the generated response was blocked
-      if (rawResponse.candidates && rawResponse.candidates[0]?.finishReason === 'SAFETY') {
-        return { isValid: false, reason: 'This input is not allowed.' };
-      }
-      
-      // If no safety issues were flagged, the input is considered valid.
-      return { isValid: true };
-
+        const {output} = await prompt(input);
+        return output!;
     } catch (error) {
       console.error('Input validation error:', error);
       // Treat errors during validation as a failure to validate, for safety.
-      // This can happen if the API call fails, which might include being blocked.
-      return { isValid: false, reason: 'This input is not allowed.' };
+      return { isValid: false, reason: 'Could not validate input.' };
     }
   }
 );
