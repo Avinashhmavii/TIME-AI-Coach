@@ -25,6 +25,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Combobox } from "./ui/combobox";
+import { jobRoles } from "@/lib/job-roles";
 
 // Step 1: Resume Upload
 const resumeSchema = z.object({
@@ -159,10 +161,12 @@ export function PrepareFlow() {
     setIsLoading(true);
     jobDetailsForm.clearErrors();
 
+    const jobRoleLabel = jobRoles.find(role => role.value === data.jobRole)?.label || data.jobRole;
+
     try {
         // Validate inputs for inappropriate content
         const [jobRoleValidation, companyValidation] = await Promise.all([
-            validateInput({ text: data.jobRole }),
+            validateInput({ text: jobRoleLabel }),
             validateInput({ text: data.company })
         ]);
 
@@ -182,13 +186,13 @@ export function PrepareFlow() {
         }
 
         const generatedQuestions = await generateRoleSpecificQuestions({
-            jobRole: data.jobRole,
+            jobRole: jobRoleLabel,
             company: data.company,
             language: data.language,
             resumeText: `${resumeAnalysis.skills.join(', ')}\n\n${resumeAnalysis.experienceSummary}`
         });
         setQuestions(generatedQuestions);
-        saveQuestions(generatedQuestions, data.language, data.jobRole, data.company);
+        saveQuestions(generatedQuestions, data.language, jobRoleLabel, data.company);
         setStep(3);
     } catch (error) {
         toast({
@@ -272,10 +276,17 @@ export function PrepareFlow() {
                           control={jobDetailsForm.control}
                           name="jobRole"
                           render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="flex flex-col">
                               <FormLabel>Job Role</FormLabel>
                               <FormControl>
-                              <Input placeholder="e.g., Software Engineer" {...field} />
+                                <Combobox
+                                    options={jobRoles}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Select role..."
+                                    searchPlaceholder="Search roles..."
+                                    emptyPlaceholder="No role found."
+                                />
                               </FormControl>
                               <FormMessage />
                           </FormItem>
