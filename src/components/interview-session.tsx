@@ -421,7 +421,17 @@ export function InterviewSession() {
             </Avatar>
             )}
             <h1 className="text-2xl font-bold font-headline mt-4">{jobRole}</h1>
-            <p className="text-muted-foreground">{company}</p>
+            {interviewMode === 'voice' && getVideoPreference() ? (
+                <div className="flex items-center justify-center gap-2 mt-1 text-muted-foreground">
+                    <Avatar className="w-5 h-5">
+                        <AvatarImage src={`https://logo.clearbit.com/${company.toLowerCase().replace(/\s/g, '')}.com`} alt={company} />
+                        <AvatarFallback>{company.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span>{company}</span>
+                </div>
+            ) : (
+                <p className="text-muted-foreground">{company}</p>
+            )}
         </div>
 
         <div className="space-y-4 my-6">
@@ -459,7 +469,7 @@ export function InterviewSession() {
       </div>
 
       {/* Right Panel */}
-      <div className="md:col-span-2 bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+      <div className="md:col-span-2 bg-white rounded-2xl shadow-lg p-6 flex flex-col overflow-hidden">
         <h2 className="text-2xl font-headline mb-4 border-b pb-2">Interview Transcript</h2>
         <ScrollArea className="flex-grow pr-4 -mr-4">
             <div className="space-y-6" ref={scrollAreaRef}>
