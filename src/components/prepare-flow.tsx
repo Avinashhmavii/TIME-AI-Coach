@@ -116,6 +116,17 @@ export function PrepareFlow() {
           throw new Error("Could not read file.");
         }
         const analysis = await analyzeResume({ resumeDataUri });
+        
+        if (!analysis.isResume) {
+          toast({
+            variant: "destructive",
+            title: "Invalid File",
+            description: "The uploaded file does not appear to be a resume. Please upload a valid resume.",
+          });
+          resumeForm.reset();
+          return;
+        }
+        
         setResumeAnalysis(analysis);
         saveResumeAnalysis(analysis);
         setStep(2);
