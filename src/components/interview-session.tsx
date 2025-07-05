@@ -124,11 +124,18 @@ export function InterviewSession() {
 
 
   const captureVideoFrame = (): string | undefined => {
-      if (!hasCameraPermission || !videoRef.current || !canvasRef.current) {
+      if (!videoRef.current || !canvasRef.current || !videoRef.current.srcObject) {
+          console.error("Video or canvas ref not available for frame capture.");
           return undefined;
       }
       const video = videoRef.current;
       const canvas = canvasRef.current;
+      
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+          console.error("Video has no dimensions, cannot capture frame.");
+          return undefined;
+      }
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
@@ -284,21 +291,30 @@ export function InterviewSession() {
 
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
+                    // Wait for the video metadata to load to ensure dimensions are available
                     await new Promise(resolve => {
-                        videoRef.current!.oncanplay = resolve;
+                        videoRef.current!.onloadedmetadata = () => {
+                           resolve(null);
+                        };
                     });
 
                     if (!initialQuestionGenerated.current) {
                         initialQuestionGenerated.current = true;
-                        await new Promise(resolve => setTimeout(resolve, 500));
+                        // Wait a moment for the camera to auto-adjust focus and exposure
+                        await new Promise(resolve => setTimeout(resolve, 1500)); 
                         const videoFrameDataUri = captureVideoFrame();
+
                         if (videoFrameDataUri) {
                             try {
                                 const result = await generateIceBreakerQuestion({ videoFrameDataUri, language: langName });
                                 initialQuestion = result.question;
                             } catch (aiError) {
                                 console.error("Ice breaker generation failed:", aiError);
+                                toast({ variant: 'destructive', title: 'Icebreaker Error', description: 'Could not generate a welcome question. Starting with a default.' });
                             }
+                        } else {
+                             console.error("Failed to capture video frame for icebreaker.");
+                             toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not capture a video frame. Starting with a default question.' });
                         }
                     }
                 }
