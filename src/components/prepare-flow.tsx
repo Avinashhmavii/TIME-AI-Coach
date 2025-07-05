@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 // Step 1: Resume Upload
 const resumeSchema = z.object({
@@ -64,6 +65,8 @@ export function PrepareFlow() {
       language: "English",
     },
   });
+
+  const watchedCompany = jobDetailsForm.watch("company");
 
   const handleStopCamera = () => {
     if (videoTestRef.current?.srcObject) {
@@ -284,9 +287,15 @@ export function PrepareFlow() {
                           render={({ field }) => (
                           <FormItem>
                               <FormLabel>Company</FormLabel>
-                              <FormControl>
-                              <Input placeholder="e.g., Google" {...field} />
-                              </FormControl>
+                              <div className="flex items-center gap-4">
+                                <Avatar>
+                                    <AvatarImage src={watchedCompany ? `https://logo.clearbit.com/${watchedCompany.toLowerCase().replace(/\s/g, '')}.com` : undefined} alt={watchedCompany} />
+                                    <AvatarFallback>{watchedCompany ? watchedCompany.charAt(0).toUpperCase() : ""}</AvatarFallback>
+                                </Avatar>
+                                <FormControl>
+                                  <Input placeholder="e.g., Google" {...field} />
+                                </FormControl>
+                              </div>
                               <FormMessage />
                           </FormItem>
                           )}
