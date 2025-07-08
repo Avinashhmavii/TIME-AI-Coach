@@ -9,7 +9,7 @@ const Table = React.forwardRef<
   <div className="relative w-full overflow-auto">
     <table
       ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
+      className={cn("w-full caption-bottom text-sm font-[Montserrat]", className)}
       {...props}
     />
   </div>
@@ -42,10 +42,7 @@ const TableFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tfoot
     ref={ref}
-    className={cn(
-      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
-      className
-    )}
+    className={cn("border-t bg-white/80 font-medium font-[Montserrat] [&>tr]:last:border-b-0", className)}
     {...props}
   />
 ))
@@ -58,7 +55,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      "border-b transition-colors hover:bg-white/80 data-[state=selected]:bg-white/80 font-[Montserrat]",
       className
     )}
     {...props}
@@ -72,10 +69,7 @@ const TableHead = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <th
     ref={ref}
-    className={cn(
-      "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
-      className
-    )}
+    className={cn("h-12 px-4 text-left align-middle font-medium text-muted-foreground font-[Montserrat] [&:has([role=checkbox])]:pr-0", className)}
     {...props}
   />
 ))

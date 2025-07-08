@@ -4,8 +4,8 @@ import { AppLayout } from '@/components/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'CareerSpark AI',
-  description: 'Your personal AI-powered interview coach.',
+  title: 'TIME AI Powered Coach',
+  description: 'Your personal AI-powered exam and interview coach.',
 };
 
 export default function RootLayout({
@@ -16,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -23,7 +24,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased" suppressHydrationWarning>
+      <body className="font-[Montserrat] antialiased" suppressHydrationWarning>
         <AppLayout>{children}</AppLayout>
         <Toaster />
       </body>

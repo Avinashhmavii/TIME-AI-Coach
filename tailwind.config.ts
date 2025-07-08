@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['"Space Grotesk"', 'sans-serif'],
+        body: ['Montserrat', 'Inter', 'sans-serif'],
+        headline: ['Montserrat', 'Inter', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

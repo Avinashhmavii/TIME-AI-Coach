@@ -1,9 +1,9 @@
-# **App Name**: CareerSpark AI
+# **App Name**: TIME AI Powered Coach
 
 ## Core Features:
 
-- Resume Role Mapper: Resume parsing & role mapping using GPT-4-Turbo. The tool extracts skills & experience and matches them to job roles & companies using RAG.
-- Interview Question Generator: Role- and company-specific question engine, using GPT-4-Turbo + RAG. Generates and adapts questions based on the parsed resume, role, and company. The questions are determined using the tool.
+- Resume Role Mapper: Resume parsing & role mapping using GPT-4-Turbo. The tool extracts skills & experience and matches them to job roles & exams using RAG.
+- Interview Question Generator: Role- and exam-specific question engine, using GPT-4-Turbo + RAG. Generates and adapts questions based on the parsed resume, role, and exam. The questions are determined using the tool.
 - Spoken Mock Interviews: Spoken mock-interviews (voice/text) featuring real-time transcription + dialogue management.
 - Real-time Interview Feedback: Instant performance feedback (content, tone, clarity) powered by GPT-4-Turbo for content analysis and SpeechBrain for prosody.
 - Performance Analytics: Analytics dashboard displaying the score, areas for improvement, and interview history.

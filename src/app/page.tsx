@@ -7,12 +7,15 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
+        <section className="flex flex-col items-center justify-center mb-8">
+          <img src="/logo.png" alt="TIME AI Powered Coach Logo" className="h-24 w-30 mb-4" />
+        </section>
         <section className="text-center mb-16">
           <h1 className="font-headline text-4xl md:text-6xl font-bold tracking-tighter mb-4 text-primary">
-            Welcome to CareerSpark AI
+            Welcome to TIME AI Powered Coach
           </h1>
           <p className="max-w-3xl mx-auto text-lg md:text-xl text-muted-foreground mb-8">
-            Your personal AI-powered coach to help you ace your next interview. Analyze your resume, generate tailored questions, and practice with a mock interview to get real-time feedback.
+            Your personal AI-powered coach to help you ace your next exam or interview. Analyze your resume, generate tailored questions, and practice with a mock interview to get real-time feedback.
           </p>
           <Button asChild size="lg">
             <Link href="/prepare">
@@ -22,7 +25,7 @@ export default function Home() {
         </section>
 
         <section className="grid md:grid-cols-3 gap-8">
-          <Card className="hover:shadow-lg transition-shadow duration-300">
+          <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/70">
             <CardHeader>
               <div className="flex items-center gap-4">
                 <div className="bg-secondary p-3 rounded-full">
@@ -37,7 +40,7 @@ export default function Home() {
               </CardDescription>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-lg transition-shadow duration-300">
+          <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/70">
             <CardHeader>
               <div className="flex items-center gap-4">
                 <div className="bg-secondary p-3 rounded-full">
@@ -52,7 +55,7 @@ export default function Home() {
               </CardDescription>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-lg transition-shadow duration-300">
+          <Card className="hover:shadow-lg transition-shadow duration-300 bg-white/70">
             <CardHeader>
               <div className="flex items-center gap-4">
                 <div className="bg-secondary p-3 rounded-full">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -35,14 +34,57 @@ const resumeSchema = z.object({
 });
 type ResumeFormValues = z.infer<typeof resumeSchema>;
 
-// Step 2: Job Details
+// Step 2: Exam Details
+const examTypes = [
+  { value: 'mba', label: 'MBA Entrance Exams' },
+  { value: 'engineering', label: 'Engineering and Science' },
+  { value: 'government', label: 'Government/Bank/SSC Exam' },
+  { value: 'law', label: 'Law and IPM' },
+  { value: 'medical', label: 'Medical' },
+  { value: 'international', label: 'International Exams' },
+  { value: 'foundation', label: 'Foundation/School Level' },
+];
+
+const examRoles: Record<string, { value: string; label: string }[]> = {
+  mba: [
+    { value: 'cat', label: 'CAT Aspirant' },
+    { value: 'xat', label: 'XAT Aspirant' },
+    { value: 'cmat', label: 'CMAT Aspirant' },
+    { value: 'gmat', label: 'GMAT Aspirant' },
+    { value: 'mat', label: 'MAT Aspirant' },
+    { value: 'mms-cet', label: 'MAH-MBA/MMS-CET Aspirant' },
+  ],
+  engineering: [
+    { value: 'jee', label: 'JEE Aspirant' },
+    { value: 'gate', label: 'GATE Aspirant' },
+  ],
+  government: [
+    { value: 'bank', label: 'Bank PO/Clerk Aspirant' },
+    { value: 'ssc', label: 'SSC CGL Aspirant' },
+    { value: 'crt', label: 'Campus Recruitment Training (CRT) Aspirant' },
+  ],
+  law: [
+    { value: 'clat', label: 'CLAT Aspirant' },
+    { value: 'ipm', label: 'IPM (IIM) Aspirant' },
+  ],
+  medical: [
+    { value: 'neet', label: 'NEET Aspirant' },
+  ],
+  international: [
+    { value: 'gre', label: 'GRE Aspirant' },
+    { value: 'gmat-international', label: 'GMAT Aspirant (International)' },
+  ],
+  foundation: [
+    { value: 'iit-foundation', label: 'IIT Foundation Aspirant' },
+  ],
+};
+
 const jobDetailsSchema = z.object({
-  jobRole: z.string().min(2, "Job role is required."),
-  company: z.string().min(2, "Company name is required."),
-  language: z.string({ required_error: "Please select a language." }),
+  examType: z.string().min(1, 'Exam type is required.'),
+  examRole: z.string().min(1, 'Specific Role/Exam is required.'),
+  language: z.string({ required_error: 'Please select a language.' }),
 });
 type JobDetailsFormValues = z.infer<typeof jobDetailsSchema>;
-
 
 export function PrepareFlow() {
   const [step, setStep] = useState(1);
@@ -63,13 +105,13 @@ export function PrepareFlow() {
   const jobDetailsForm = useForm<JobDetailsFormValues>({
     resolver: zodResolver(jobDetailsSchema),
     defaultValues: {
-      jobRole: "",
-      company: "",
-      language: "English",
+      examType: '',
+      examRole: '',
+      language: 'English',
     },
   });
 
-  const watchedCompany = jobDetailsForm.watch("company");
+  const watchedExamType = jobDetailsForm.watch('examType');
 
   const handleStopCamera = () => {
     if (videoTestRef.current?.srcObject) {
@@ -162,25 +204,21 @@ export function PrepareFlow() {
     setIsLoading(true);
     jobDetailsForm.clearErrors();
 
-    const jobRoleLabel = jobRoles.find(role => role.value === data.jobRole)?.label || data.jobRole;
-    const companyLabel = companies.find(c => c.value === data.company)?.label || data.company;
-
-
     try {
         // Validate inputs for inappropriate content
-        const [jobRoleValidation, companyValidation] = await Promise.all([
-            validateInput({ text: jobRoleLabel }),
-            validateInput({ text: companyLabel })
+        const [examTypeValidation, examRoleValidation] = await Promise.all([
+            validateInput({ text: data.examType }),
+            validateInput({ text: data.examRole }),
         ]);
 
         let hasError = false;
-        if (!jobRoleValidation.isValid) {
-            jobDetailsForm.setError("jobRole", { type: "manual", message: jobRoleValidation.reason || "This job role is not allowed." });
+        if (!examTypeValidation.isValid) {
+            jobDetailsForm.setError("examType", { type: "manual", message: examTypeValidation.reason || "This exam type is not allowed." });
             hasError = true;
         }
 
-        if (!companyValidation.isValid) {
-            jobDetailsForm.setError("company", { type: "manual", message: companyValidation.reason || "This company name is not allowed." });
+        if (!examRoleValidation.isValid) {
+            jobDetailsForm.setError("examRole", { type: "manual", message: examRoleValidation.reason || "This role/exam is not allowed." });
             hasError = true;
         }
 
@@ -189,13 +227,13 @@ export function PrepareFlow() {
         }
 
         const generatedQuestions = await generateRoleSpecificQuestions({
-            jobRole: jobRoleLabel,
-            company: companyLabel,
+            jobRole: data.examRole,
+            company: data.examType,
             language: data.language,
             resumeText: `${resumeAnalysis.skills.join(', ')}\n\n${resumeAnalysis.experienceSummary}`
         });
         setQuestions(generatedQuestions);
-        saveQuestions(generatedQuestions, data.language, jobRoleLabel, companyLabel);
+        saveQuestions(generatedQuestions, data.language, data.examRole, data.examType);
         setStep(3);
     } catch (error) {
         toast({
@@ -252,7 +290,7 @@ export function PrepareFlow() {
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><CheckCircle className="text-green-500" />Resume Analysis Complete</CardTitle>
-                    <CardDescription>Here's what our AI found. Now, tell us about the role you're applying for.</CardDescription>
+                    <CardDescription>Here's what our AI found. Now, tell us about the exam you're preparing for.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
@@ -269,8 +307,8 @@ export function PrepareFlow() {
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline flex items-center gap-2"><Sparkles /> Step 2: Job & Company Details</CardTitle>
-                    <CardDescription>Provide the job role and company to generate tailored questions.</CardDescription>
+                    <CardTitle className="font-headline flex items-center gap-2"><Sparkles /> Step 2: Exam Details</CardTitle>
+                    <CardDescription>Select your exam type and specific exam to generate tailored questions.</CardDescription>
                 </CardHeader>
                 <CardContent>
                 <Form {...jobDetailsForm}>
@@ -278,45 +316,40 @@ export function PrepareFlow() {
                        <div className="grid sm:grid-cols-2 gap-4">
                             <FormField
                                 control={jobDetailsForm.control}
-                                name="company"
+                                name="examType"
                                 render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                    <FormLabel>Company</FormLabel>
-                                    <div className="flex items-center gap-2">
-                                        <Avatar className="w-8 h-8">
-                                            <AvatarImage src={watchedCompany ? `https://logo.clearbit.com/${(companies.find(c => c.value === watchedCompany)?.label || watchedCompany).toLowerCase().replace(/\s/g, '')}.com` : undefined} alt={watchedCompany} />
-                                            <AvatarFallback>{watchedCompany ? watchedCompany.charAt(0).toUpperCase() : "?"}</AvatarFallback>
-                                        </Avatar>
-                                        <FormControl>
-                                            <Combobox
-                                                options={companies}
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                                placeholder="Select or type..."
-                                                searchPlaceholder="Search companies..."
-                                                emptyPlaceholder="No company found."
-                                                creatable={true}
-                                            />
-                                        </FormControl>
-                                    </div>
+                                    <FormLabel>Exam Type</FormLabel>
+                                    <FormControl>
+                                        <Combobox
+                                            options={examTypes}
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                            placeholder="Select exam type..."
+                                            searchPlaceholder="Search exam types..."
+                                            emptyPlaceholder="No exam type found."
+                                            creatable={false}
+                                        />
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                                 )}
                             />
                             <FormField
                                 control={jobDetailsForm.control}
-                                name="jobRole"
+                                name="examRole"
                                 render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                    <FormLabel>Job Role</FormLabel>
+                                    <FormLabel>Specific Role/Exam</FormLabel>
                                     <FormControl>
                                         <Combobox
-                                            options={jobRoles}
+                                            options={watchedExamType ? examRoles[watchedExamType] || [] : []}
                                             value={field.value}
                                             onChange={field.onChange}
-                                            placeholder="Select role..."
-                                            searchPlaceholder="Search roles..."
-                                            emptyPlaceholder="No role found."
+                                            placeholder="Select role/exam..."
+                                            searchPlaceholder="Search roles/exams..."
+                                            emptyPlaceholder="No role/exam found."
+                                            creatable={false}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -338,9 +371,6 @@ export function PrepareFlow() {
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value="English">English</SelectItem>
-                                <SelectItem value="Spanish">Spanish</SelectItem>
-                                <SelectItem value="French">French</SelectItem>
-                                <SelectItem value="German">German</SelectItem>
                                 <SelectItem value="Hindi">Hindi</SelectItem>
                                 <SelectItem value="Hinglish">Hinglish</SelectItem>
                               </SelectContent>

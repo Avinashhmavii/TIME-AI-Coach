@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { getQuestions, getResumeAnalysis, saveInterviewSummary, type InterviewData, getVideoPreference, getInterviewMode, type InterviewMode } from "@/lib/data-store";
@@ -37,6 +36,14 @@ const languageCodeMap: Record<string, string> = {
 
 const getLanguageCode = (languageName: string) => {
   return languageCodeMap[languageName] || "en-US";
+}
+
+// TypeScript: Add types for SpeechRecognition for browser compatibility
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
 }
 
 export function InterviewSession() {
@@ -175,7 +182,10 @@ export function InterviewSession() {
         company,
         resumeText,
         language: languageName,
-        conversationHistory: interviewData.map(d => ({question: d.question, answer: d.answer})),
+        conversationHistory: [
+          ...interviewData.map(d => ({question: d.question, answer: d.answer})),
+          { question: currentQuestion, answer: currentAnswer }
+        ],
         currentTranscript: currentAnswer,
         videoFrameDataUri
       });
@@ -248,15 +258,15 @@ export function InterviewSession() {
 
         // 3. Set up speech recognition if in voice mode.
         if (mode === 'voice') {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (SpeechRecognition) {
-              recognitionRef.current = new SpeechRecognition();
+            const SpeechRecognitionClass: any = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognitionClass) {
+              recognitionRef.current = new SpeechRecognitionClass();
               const recognition = recognitionRef.current;
               recognition.continuous = true;
               recognition.interimResults = true;
               recognition.lang = langCode;
               
-              recognition.onresult = (event) => {
+              recognition.onresult = (event: any) => {
                 let finalTranscript = "";
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if(event.results[i].isFinal) {
@@ -268,7 +278,7 @@ export function InterviewSession() {
                 }
               };
         
-              recognition.onerror = (event) => {
+              recognition.onerror = (event: any) => {
                 toast({variant: 'destructive', title: 'Speech Recognition Error', description: event.error});
                 if (event.error !== 'network' && event.error !== 'no-speech') {
                     setConversationState('idle');
@@ -288,7 +298,7 @@ export function InterviewSession() {
         }
         
         // 4. Get the initial question.
-        const defaultGreeting = `Hello ${candidateName}, I am Tina, welcome to the CareerSpark AI interview prep. To make this session as helpful as possible, what area would you like to focus on? We can do behavioral questions, technical questions, dive deeper into your resume, or discuss the company.`;
+        const defaultGreeting = `Hello ${candidateName}, I am Tina, welcome to the TIME AI Powered Coach interview prep. To make this session as helpful as possible, what area would you like to focus on? We can practice subject-specific questions, aptitude-based questions, personality/HR-type questions, or simulate a full mock interview for your selected exam.`;
 
         if (mode !== 'voice' || !videoIsEnabled) {
             setHasCameraPermission(false);
@@ -352,10 +362,10 @@ export function InterviewSession() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
-  const speak = (text: string) => {
+  const speak = async (text: string) => {
     if (!text) return;
 
-    setConversationLog(prev => {
+    setConversationLog((prev: ConversationEntry[]) => {
         if(prev[prev.length - 1]?.speaker === 'ai' && prev[prev.length - 1]?.text === text) return prev;
         return [...prev, { speaker: 'ai', text }];
     });
@@ -366,23 +376,30 @@ export function InterviewSession() {
         setConversationState(nextState);
         return;
     }
-    
-    if ('speechSynthesis' in window) {
-      setConversationState('speaking');
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = language;
-      utterance.onend = () => {
+
+    setConversationState('speaking');
+    try {
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, language }),
+      });
+      if (!response.ok) throw new Error('TTS request failed');
+      const { audioUrl } = await response.json();
+      const audio = new Audio(audioUrl);
+      audio.onended = () => {
         if (conversationStateRef.current !== 'finished') {
-            setConversationState('listening');
+          setConversationState('listening');
         }
-      }
-      utterance.onerror = () => {
+      };
+      audio.onerror = () => {
         if (conversationStateRef.current !== 'finished') {
-            setConversationState(interviewMode === 'voice' ? 'listening' : 'idle');
+          setConversationState(interviewMode === 'voice' ? 'listening' : 'idle');
         }
-      }
-      window.speechSynthesis.speak(utterance);
+      };
+      audio.play();
+    } catch (error) {
+      setConversationState(interviewMode === 'voice' ? 'listening' : 'idle');
     }
   }
 
@@ -410,7 +427,7 @@ export function InterviewSession() {
       )}
 
       {/* Left Panel */}
-      <div className="md:col-span-1 bg-white rounded-2xl shadow-lg p-6 flex flex-col text-center">
+      <div className="md:col-span-1 bg-white/70 rounded-2xl shadow-lg p-6 flex flex-col text-center">
         <div className="flex-1 flex flex-col justify-center">
             {interviewMode === 'voice' && getVideoPreference() ? (
             <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden shadow-inner flex items-center justify-center relative">
@@ -452,7 +469,7 @@ export function InterviewSession() {
                 {conversationState === 'listening' ? (
                      <div className="w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse"></div>
                 ) : (
-                    <div className="w-full h-px bg-gray-200"></div>
+                    <div className="w-full h-px bg-white/40"></div>
                 )}
             </div>
           <p className="text-lg font-mono text-muted-foreground">{formatTime(time)}</p>
@@ -482,7 +499,7 @@ export function InterviewSession() {
       </div>
 
       {/* Right Panel */}
-      <div className="md:col-span-2 bg-white rounded-2xl shadow-lg p-6 flex flex-col overflow-hidden">
+      <div className="md:col-span-2 bg-white/70 rounded-2xl shadow-lg p-6 flex flex-col overflow-hidden">
         <h2 className="text-2xl font-headline mb-4 border-b pb-2 flex-shrink-0">Interview Transcript</h2>
         <ScrollArea className="flex-grow pr-4 -mr-4">
             <div className="space-y-6" ref={scrollAreaRef}>
@@ -495,7 +512,7 @@ export function InterviewSession() {
                         )}
                         <div className={cn(
                             "rounded-lg px-4 py-3 max-w-[80%] text-sm md:text-base",
-                             entry.speaker === 'ai' ? 'bg-gray-100 text-gray-800 rounded-tl-none' : 'bg-primary text-primary-foreground rounded-tr-none'
+                             entry.speaker === 'ai' ? 'bg-white/60 text-gray-800 rounded-tl-none' : 'bg-primary text-primary-foreground rounded-tr-none'
                         )}>
                             {entry.text}
                         </div>
@@ -511,7 +528,7 @@ export function InterviewSession() {
                         <Avatar className="w-8 h-8 border">
                              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">AI</AvatarFallback>
                         </Avatar>
-                         <div className="rounded-lg px-4 py-3 bg-gray-100">
+                         <div className="rounded-lg px-4 py-3 bg-white/60">
                             <Loader className="w-5 h-5 animate-spin text-primary"/>
                         </div>
                     </div>

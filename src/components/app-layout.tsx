@@ -20,7 +20,7 @@ import {
   Mic,
   History,
 } from "lucide-react";
-import { Logo } from "@/components/logo";
+import Image from "next/image";
 import { Button } from "./ui/button";
 
 const links = [
@@ -39,7 +39,9 @@ function AppLayoutInternal({ children }: { children: React.ReactNode }) {
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center justify-between">
-            <Logo />
+            <div className="flex justify-center w-full py-2">
+              <Image src="/sidelogo.png" alt="TIME AI Sidebar Logo" width={48} height={48} />
+            </div>
             <div className="hidden md:flex">
               <SidebarTrigger />
             </div>

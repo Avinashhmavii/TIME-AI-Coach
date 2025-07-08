@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { ThumbsUp, Lightbulb, BarChart, ArrowLeft, Smile } from "lucide-react";
+import { saveAs } from "file-saver";
 
 export function SummaryDisplay() {
   const [summary, setSummary] = useState<InterviewData[] | null>(null);
@@ -16,6 +17,21 @@ export function SummaryDisplay() {
     const data = getInterviewSummary();
     setSummary(data);
   }, []);
+
+  const handleDownload = () => {
+    if (!summary) return;
+    const formatted = summary.map((item, idx) => ({
+      number: idx + 1,
+      question: item.question,
+      answer: item.answer,
+      feedback: item.feedback
+    }));
+    const blob = new Blob([
+      JSON.stringify(formatted, null, 2)
+    ], { type: 'application/json' });
+    const date = new Date().toISOString().slice(0,10);
+    saveAs(blob, `interview-feedback-${date}.json`);
+  };
 
   if (!summary) {
     return (
@@ -45,6 +61,9 @@ export function SummaryDisplay() {
         <CardHeader>
             <CardTitle className="font-headline text-2xl">Detailed Feedback</CardTitle>
             <CardDescription>Review your answers and the AI-powered feedback for each question.</CardDescription>
+            <Button className="mt-4" onClick={handleDownload} variant="outline">
+              Download Full Feedback
+            </Button>
         </CardHeader>
         <CardContent>
             <Accordion type="single" collapsible className="w-full">

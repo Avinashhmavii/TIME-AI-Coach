@@ -4,11 +4,11 @@ import type { InterviewAgentOutput } from '@/ai/flows/interview-agent';
 import type { AnalyzeResumeOutput } from '@/ai/flows/resume-analyzer';
 import type { GenerateRoleSpecificQuestionsOutput } from '@/ai/flows/interview-question-generator';
 
-const RESUME_ANALYSIS_KEY = 'careerSpark_resumeAnalysis';
-const QUESTIONS_KEY = 'careerSpark_questions';
-const INTERVIEW_SUMMARY_KEY = 'careerSpark_interviewSummary';
-const VIDEO_PREFERENCE_KEY = 'careerSpark_videoPreference';
-const INTERVIEW_MODE_KEY = 'careerSpark_interviewMode';
+const RESUME_ANALYSIS_KEY = 'timeAIPoweredCoach_resumeAnalysis';
+const QUESTIONS_KEY = 'timeAIPoweredCoach_questions';
+const INTERVIEW_SUMMARY_KEY = 'timeAIPoweredCoach_interviewSummary';
+const VIDEO_PREFERENCE_KEY = 'timeAIPoweredCoach_videoPreference';
+const INTERVIEW_MODE_KEY = 'timeAIPoweredCoach_interviewMode';
 
 export type InterviewMode = 'voice' | 'text';
 

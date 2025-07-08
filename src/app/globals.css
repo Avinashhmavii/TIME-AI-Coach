@@ -1,9 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: 'Inter', sans-serif;
+  @apply antialiased;
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  background: linear-gradient(120deg, #f7971e 0%, #ffd200 100%);
 }
 
 @layer base {
@@ -83,6 +86,6 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
 }

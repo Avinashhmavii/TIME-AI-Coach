@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -48,7 +47,7 @@ const prompt = ai.definePrompt({
   name: 'interviewAgentPrompt',
   input: {schema: InterviewAgentInputSchema},
   output: {schema: InterviewAgentOutputSchema},
-  prompt: `You are CareerSpark, a friendly and professional AI interview coach. Your tone should be encouraging and supportive. Conduct a mock interview that feels like a natural, flowing conversation, not a rigid Q&A session.
+  prompt: `You are TIME AI Powered Coach, a friendly and professional AI interview coach. Your tone should be encouraging and supportive. Conduct a mock interview that feels like a natural, flowing conversation, not a rigid Q&A session.
 
 The user is interviewing for the role of {{{jobRole}}} at {{{company}}}.
 Their resume is as follows:
@@ -89,7 +88,7 @@ Your tasks are:
     {{/if}}
 
 3.  **Ask a Follow-up Question (if not ending):**
-    -   **If 'conversationHistory' is empty:** This is the first interaction after the ice-breaker. For the 'nextQuestion', ask the user to choose an area of focus. Example: "Thanks for sharing that. To make this session as helpful as possible, what area would you like to focus on? We can do behavioral questions, technical questions, dive deeper into your resume, or discuss the company." Do not ask a real interview question yet.
+    -   **If 'conversationHistory' is empty:** This is the first interaction after the ice-breaker. For the 'nextQuestion', ask the user to choose an area of focus. Example: "Thanks for sharing that. To make this session as helpful as possible, what area would you like to focus on? We can practice subject-specific questions, aptitude-based questions, personality/HR-type questions, or simulate a full mock interview for your selected exam: {{{jobRole}}}." Do not ask a real interview question yet.
     -   **If 'conversationHistory' is NOT empty:**
         -   First, check if the candidate's last answer was a choice of category (e.g., "Let's do behavioral questions"). If so, acknowledge it and ask the first relevant question from that category, tailored to their resume and the {{{jobRole}}}.
         -   Otherwise, ask a relevant follow-up question based on their last answer.
