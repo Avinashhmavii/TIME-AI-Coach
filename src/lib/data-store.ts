@@ -15,7 +15,20 @@ export type InterviewMode = 'voice' | 'text';
 export type InterviewData = {
   question: string;
   answer: string;
-  feedback: Omit<InterviewAgentOutput, 'nextQuestion' | 'isInterviewOver'>;
+  feedback: {
+    contentFeedback: string;
+    toneFeedback: string;
+    clarityFeedback: string;
+    visualFeedback: string;
+    scoring?: {
+      ideas: { score: number; justification: string };
+      organization: { score: number; justification: string };
+      accuracy: { score: number; justification: string };
+      voice: { score: number; justification: string };
+      grammar: { score: number; justification: string };
+      stopwords: { score: number; justification: string };
+    };
+  };
 };
 
 export type QuestionsData = GenerateRoleSpecificQuestionsOutput & {

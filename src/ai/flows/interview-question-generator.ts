@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import questions from '../interview_questions.json';
 
 const GenerateRoleSpecificQuestionsInputSchema = z.object({
   resumeText: z.string().describe("The text content of the user's resume."),
@@ -28,6 +29,8 @@ export async function generateRoleSpecificQuestions(input: GenerateRoleSpecificQ
   return generateRoleSpecificQuestionsFlow(input);
 }
 
+const EXAMPLE_QUESTIONS_SAMPLE = questions.slice(0, 10); // Take a small sample for prompt context
+
 const prompt = ai.definePrompt({
   name: 'generateRoleSpecificQuestionsPrompt',
   input: {schema: GenerateRoleSpecificQuestionsInputSchema},
@@ -41,6 +44,9 @@ Job Role: {{{jobRole}}}
 Company: {{{company}}}
 Resume:
 {{{resumeText}}}
+
+Here are some example interview questions for reference (do not copy, just use for style and type):
+${EXAMPLE_QUESTIONS_SAMPLE.map(q => `- [${q.category}/${q.subcategory}/${q.subsection}] ${q.question}`).join('\n')}
 
 Generate a list of relevant interview questions in {{{language}}}:
 `,

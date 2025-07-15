@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { callGeminiWithFailover } from '@/ai/gemini-failover';
 
 const InterviewHistorySchema = z.object({
     question: z.string(),
@@ -34,6 +35,15 @@ const InterviewAgentOutputSchema = z.object({
   toneFeedback: z.string().describe('Feedback on the tone of the response.'),
   clarityFeedback: z.string().describe('Feedback on the clarity of the response.'),
   visualFeedback: z.string().describe('Feedback on the visual presentation, like body language and confidence, based on the video frame.'),
+  // Add scoring section
+  scoring: z.object({
+    ideas: z.object({ score: z.number(), justification: z.string() }),
+    organization: z.object({ score: z.number(), justification: z.string() }),
+    accuracy: z.object({ score: z.number(), justification: z.string() }),
+    voice: z.object({ score: z.number(), justification: z.string() }),
+    grammar: z.object({ score: z.number(), justification: z.string() }),
+    stopwords: z.object({ score: z.number(), justification: z.string() })
+  }).describe('Scoring for the answer in six categories, each with a score (1-10) and a one-line justification.'),
   nextQuestion: z.string().describe('The next interview question to ask. If the interview is over, this should be a concluding remark.'),
   isInterviewOver: z.boolean().describe('Set to true if this is the final remark and the interview should conclude.'),
 });
@@ -87,6 +97,33 @@ Your tasks are:
     -   For visual feedback, state that no video was provided.
     {{/if}}
 
+    -   **Scoring:**
+        Evaluate the candidate's answer to the question below based on these exact six categories. Use a GENEROUS and REALISTIC scoring scale where:
+        - 8-10/10: Excellent to outstanding performance
+        - 6-7/10: Good to very good performance  
+        - 4-5/10: Average to satisfactory performance
+        - 1-3/10: Below average to poor performance
+
+        1. Ideas: The answer should focus on one clear idea, maintained throughout without tangents. Score generously if the candidate demonstrates clear thinking and relevant ideas.
+        2. Organization: Ideas should flow logically and cohesively. Score generously if the answer has a logical structure, even if not perfect.
+        3. Accuracy: The answer should fully address all parts of the question. Score generously if the candidate addresses the main points of the question.
+        4. Voice: The answer should be unique and not generic. Score generously if the candidate shows personality or specific examples.
+        5. Grammar Usage and Sentence Fluency: The answer should use correct grammar and sentence structure. Score generously - minor grammar issues should not heavily penalize good content.
+        6. Stop words: Minimize filler words (e.g., uhh, ahh, ummm). Score generously - only heavily penalize excessive filler words.
+
+        IMPORTANT: Be GENEROUS in your scoring. A well-structured, relevant answer should score 7-9/10. Only give very low scores (1-3/10) for truly poor or irrelevant answers.
+
+        Provide a score (1-10, 1 lowest, 10 highest) for each category with a one-line justification.
+        Respond in this format:
+        scoring: {
+          ideas: { score: X, justification: "..." },
+          organization: { score: X, justification: "..." },
+          accuracy: { score: X, justification: "..." },
+          voice: { score: X, justification: "..." },
+          grammar: { score: X, justification: "..." },
+          stopwords: { score: X, justification: "..." }
+        }
+
 3.  **Ask a Follow-up Question (if not ending):**
     -   **If 'conversationHistory' is empty:** This is the first interaction after the ice-breaker. For the 'nextQuestion', ask the user to choose an area of focus. Example: "Thanks for sharing that. To make this session as helpful as possible, what area would you like to focus on? We can practice subject-specific questions, aptitude-based questions, personality/HR-type questions, or simulate a full mock interview for your selected exam: {{{jobRole}}}." Do not ask a real interview question yet.
     -   **If 'conversationHistory' is NOT empty:**
@@ -111,7 +148,6 @@ const interviewAgentFlow = ai.defineFlow(
     outputSchema: InterviewAgentOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    return await callGeminiWithFailover('googleai/gemini-2.0-flash', input);
   }
 );

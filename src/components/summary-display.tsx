@@ -7,7 +7,7 @@ import { getInterviewSummary, type InterviewData } from "@/lib/data-store";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
-import { ThumbsUp, Lightbulb, BarChart, ArrowLeft, Smile } from "lucide-react";
+import { ThumbsUp, Lightbulb, BarChart, ArrowLeft, Smile, Star } from "lucide-react";
 import { saveAs } from "file-saver";
 
 export function SummaryDisplay() {
@@ -56,6 +56,21 @@ export function SummaryDisplay() {
     );
   }
 
+  // Calculate overall score
+  let overallScore = null;
+  if (summary.length > 0 && summary[0].feedback?.scoring) {
+    let total = 0;
+    let count = 0;
+    summary.forEach(item => {
+      const s = item.feedback.scoring;
+      if (s) {
+        total += s.ideas.score + s.organization.score + s.accuracy.score + s.voice.score + s.grammar.score + s.stopwords.score;
+        count += 6;
+      }
+    });
+    overallScore = count > 0 ? (total / count) : null;
+  }
+
   return (
     <Card className="max-w-4xl mx-auto">
         <CardHeader>
@@ -64,6 +79,15 @@ export function SummaryDisplay() {
             <Button className="mt-4" onClick={handleDownload} variant="outline">
               Download Full Feedback
             </Button>
+            {overallScore !== null && (
+              <div className="mt-6 flex items-center gap-3 bg-primary/10 rounded-lg p-4 border border-primary/20">
+                <Star className="text-yellow-500 w-7 h-7" />
+                <div>
+                  <div className="text-lg font-bold">Overall Interview Score: <span className="text-primary">{overallScore.toFixed(1)}/10</span></div>
+                  <div className="text-sm text-muted-foreground">This is the average of all category scores across all your answers.</div>
+                </div>
+              </div>
+            )}
         </CardHeader>
         <CardContent>
             <Accordion type="single" collapsible className="w-full">
@@ -109,6 +133,21 @@ export function SummaryDisplay() {
                                             <p className="text-muted-foreground">{item.feedback.visualFeedback}</p>
                                         </div>
                                     </div>
+                                    )}
+                                    {/* Scoring Section */}
+                                    {item.feedback.scoring && (
+                                      <div className="mt-6">
+                                        <h5 className="font-semibold mb-2">Scoring Breakdown</h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                          {Object.entries(item.feedback.scoring).map(([cat, val]) => (
+                                            <div key={cat} className="flex flex-col border rounded-md p-2 bg-muted/30">
+                                              <span className="font-bold capitalize">{cat}:</span>
+                                              <span className="text-primary font-semibold">{val.score}/10</span>
+                                              <span className="text-xs text-muted-foreground">{val.justification}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
                                     )}
                                </div>
                             </div>

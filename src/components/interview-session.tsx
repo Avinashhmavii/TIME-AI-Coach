@@ -18,7 +18,21 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ScrollArea } from "./ui/scroll-area";
 
-type Feedback = Omit<InterviewAgentOutput, 'nextQuestion' | 'isInterviewOver'>;
+// Update Feedback type to include scoring
+type Feedback = {
+  contentFeedback: string;
+  toneFeedback: string;
+  clarityFeedback: string;
+  visualFeedback: string;
+  scoring?: {
+    ideas: { score: number; justification: string };
+    organization: { score: number; justification: string };
+    accuracy: { score: number; justification: string };
+    voice: { score: number; justification: string };
+    grammar: { score: number; justification: string };
+    stopwords: { score: number; justification: string };
+  };
+};
 type ConversationState = 'loading' | 'speaking' | 'listening' | 'thinking' | 'finished' | 'idle';
 type ConversationEntry = {
   speaker: 'ai' | 'user';
@@ -194,7 +208,8 @@ export function InterviewSession() {
         contentFeedback: result.contentFeedback,
         toneFeedback: result.toneFeedback,
         clarityFeedback: result.clarityFeedback,
-        visualFeedback: result.visualFeedback
+        visualFeedback: result.visualFeedback,
+        scoring: result.scoring // <-- ensure scoring is included
       };
       
       const newInterviewData = [...interviewData, {

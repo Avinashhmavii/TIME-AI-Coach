@@ -1,0 +1,360 @@
+1|MBA Entrance Exams|CAT|Aptitude|What is the probability of getting a head when tossing a fair coin?
+2|MBA Entrance Exams|CAT|Aptitude|If a pipe fills a tank in 4 hours and another empties it in 6 hours, how long will it take to fill the tank together?
+3|MBA Entrance Exams|CAT|Aptitude|A man sells an article at a loss of 10%. If the selling price is ₹450, what was the cost price?
+4|MBA Entrance Exams|CAT|Aptitude|If the perimeter of a rectangle is 60 cm and its length is 20 cm, what is its width?
+5|MBA Entrance Exams|CAT|Aptitude|The average of five numbers is 46. What is the sum of the numbers?
+6|MBA Entrance Exams|CAT|Personality|Give an example of a situation where you took initiative.
+7|MBA Entrance Exams|CAT|Personality|How do you balance personal and professional life?
+8|MBA Entrance Exams|CAT|Personality|What qualities do you think a good leader must have?
+9|MBA Entrance Exams|CAT|Personality|Can you tell us about a time you resolved a team conflict?
+10|MBA Entrance Exams|CAT|Personality|Describe a challenge you faced and how you overcame it.
+11|MBA Entrance Exams|CAT|Technical|How does a bubble sort algorithm work?
+12|MBA Entrance Exams|CAT|Technical|Write a Python function to check if a number is prime.
+13|MBA Entrance Exams|CAT|Technical|What is SQL JOIN and what are its types?
+14|MBA Entrance Exams|CAT|Technical|Explain polymorphism in object-oriented programming.
+15|MBA Entrance Exams|CAT|Technical|What is the difference between stack and queue?
+16|MBA Entrance Exams|CAT|Subject-Specific|Describe Maslow’s Hierarchy of Needs and its relevance in HRM.
+17|MBA Entrance Exams|CAT|Subject-Specific|In economics, explain the concept of demand and supply with a graph.
+18|MBA Entrance Exams|CAT|Subject-Specific|How does inflation impact the purchasing power of money?
+19|MBA Entrance Exams|CAT|Subject-Specific|Define elasticity of demand and give a real-life example.
+20|MBA Entrance Exams|CAT|Subject-Specific|Describe Porter's Five Forces model.
+21|MBA Entrance Exams|MAH-MBA/MMS-CET|Aptitude|In how many ways can the letters of the word 'MATH' be arranged?
+22|MBA Entrance Exams|MAH-MBA/MMS-CET|Aptitude|Find the compound interest on ₹1000 at 10% p.a. for 2 years, compounded annually.
+23|MBA Entrance Exams|MAH-MBA/MMS-CET|Aptitude|What is the least common multiple (LCM) of 12, 18, and 30?
+24|MBA Entrance Exams|MAH-MBA/MMS-CET|Aptitude|Solve for x: 3x + 5 = 20.
+25|MBA Entrance Exams|MAH-MBA/MMS-CET|Aptitude|What is the simple interest on ₹1200 at 5% per annum for 2 years?
+26|MBA Entrance Exams|MAH-MBA/MMS-CET|Personality|Describe your ideal work environment and why.
+27|MBA Entrance Exams|MAH-MBA/MMS-CET|Personality|What are your strengths and how do they help in a team?
+28|MBA Entrance Exams|MAH-MBA/MMS-CET|Personality|Describe a failure that taught you a valuable lesson.
+29|MBA Entrance Exams|MAH-MBA/MMS-CET|Personality|How do you prioritize tasks when you're under pressure?
+30|MBA Entrance Exams|MAH-MBA/MMS-CET|Personality|How do you adapt to changes in the workplace?
+31|MBA Entrance Exams|MAH-MBA/MMS-CET|Technical|What is a pointer in C, and how is it used?
+32|MBA Entrance Exams|MAH-MBA/MMS-CET|Technical|Describe the OSI model and its seven layers.
+33|MBA Entrance Exams|MAH-MBA/MMS-CET|Technical|Explain the concept of recursion with an example.
+34|MBA Entrance Exams|MAH-MBA/MMS-CET|Technical|What are binary trees and how are they used in computer science?
+35|MBA Entrance Exams|MAH-MBA/MMS-CET|Technical|What is the difference between an abstract class and an interface in Java?
+36|MBA Entrance Exams|MAH-MBA/MMS-CET|Subject-Specific|What is SWOT analysis and how is it used in strategic planning?
+37|MBA Entrance Exams|MAH-MBA/MMS-CET|Subject-Specific|What is the difference between nominal and real GDP?
+38|MBA Entrance Exams|MAH-MBA/MMS-CET|Subject-Specific|What is Six Sigma and how is it applied in business processes?
+39|MBA Entrance Exams|MAH-MBA/MMS-CET|Subject-Specific|What are the major functions of financial management?
+40|MBA Entrance Exams|MAH-MBA/MMS-CET|Subject-Specific|Explain the Law of Diminishing Marginal Utility with an example.
+41|MBA Entrance Exams|XAT|Aptitude|What is the probability of getting a head when tossing a fair coin?
+42|MBA Entrance Exams|XAT|Aptitude|If the perimeter of a rectangle is 60 cm and its length is 20 cm, what is its width?
+43|MBA Entrance Exams|XAT|Aptitude|Solve for x: 3x + 5 = 20.
+44|MBA Entrance Exams|XAT|Aptitude|The average of five numbers is 46. What is the sum of the numbers?
+45|MBA Entrance Exams|XAT|Aptitude|What is the simple interest on ₹1200 at 5% per annum for 2 years?
+46|MBA Entrance Exams|XAT|Personality|What are your strengths and how do they help in a team?
+47|MBA Entrance Exams|XAT|Personality|Describe a failure that taught you a valuable lesson.
+48|MBA Entrance Exams|XAT|Personality|Describe your ideal work environment and why.
+49|MBA Entrance Exams|XAT|Personality|How do you balance personal and professional life?
+50|MBA Entrance Exams|XAT|Personality|What qualities do you think a good leader must have?
+51|MBA Entrance Exams|XAT|Technical|Describe the OSI model and its seven layers.
+52|MBA Entrance Exams|XAT|Technical|Explain the concept of recursion with an example.
+53|MBA Entrance Exams|XAT|Technical|How does a bubble sort algorithm work?
+54|MBA Entrance Exams|XAT|Technical|Write a Python function to check if a number is prime.
+55|MBA Entrance Exams|XAT|Technical|What is a pointer in C, and how is it used?
+56|MBA Entrance Exams|XAT|Subject-Specific|Define elasticity of demand and give a real-life example.
+57|MBA Entrance Exams|XAT|Subject-Specific|In economics, explain the concept of demand and supply with a graph.
+58|MBA Entrance Exams|XAT|Subject-Specific|What are the major functions of financial management?
+59|MBA Entrance Exams|XAT|Subject-Specific|Explain the Law of Diminishing Marginal Utility with an example.
+60|MBA Entrance Exams|XAT|Subject-Specific|Describe Maslow’s Hierarchy of Needs and its relevance in HRM.
+61|MBA Entrance Exams|CMAT|Aptitude|A man sells an article at a loss of 10%. If the selling price is ₹450, what was the cost price?
+62|MBA Entrance Exams|CMAT|Aptitude|In how many ways can the letters of the word 'MATH' be arranged?
+63|MBA Entrance Exams|CMAT|Aptitude|Find the compound interest on ₹1000 at 10% p.a. for 2 years, compounded annually.
+64|MBA Entrance Exams|CMAT|Aptitude|If a pipe fills a tank in 4 hours and another empties it in 6 hours, how long will it take to fill the tank together?
+65|MBA Entrance Exams|CMAT|Aptitude|What is the least common multiple (LCM) of 12, 18, and 30?
+66|MBA Entrance Exams|CMAT|Personality|Can you tell us about a time you resolved a team conflict?
+67|MBA Entrance Exams|CMAT|Personality|Describe a challenge you faced and how you overcame it.
+68|MBA Entrance Exams|CMAT|Personality|Give an example of a situation where you took initiative.
+69|MBA Entrance Exams|CMAT|Personality|How do you prioritize tasks when you're under pressure?
+70|MBA Entrance Exams|CMAT|Personality|How do you adapt to changes in the workplace?
+71|MBA Entrance Exams|CMAT|Technical|What is the difference between an abstract class and an interface in Java?
+72|MBA Entrance Exams|CMAT|Technical|What are binary trees and how are they used in computer science?
+73|MBA Entrance Exams|CMAT|Technical|What is the difference between stack and queue?
+74|MBA Entrance Exams|CMAT|Technical|Explain polymorphism in object-oriented programming.
+75|MBA Entrance Exams|CMAT|Technical|What is SQL JOIN and what are its types?
+76|MBA Entrance Exams|CMAT|Subject-Specific|What is SWOT analysis and how is it used in strategic planning?
+77|MBA Entrance Exams|CMAT|Subject-Specific|What is the difference between nominal and real GDP?
+78|MBA Entrance Exams|CMAT|Subject-Specific|How does inflation impact the purchasing power of money?
+79|MBA Entrance Exams|CMAT|Subject-Specific|Describe Porter's Five Forces model.
+80|MBA Entrance Exams|CMAT|Subject-Specific|What is Six Sigma and how is it applied in business processes?
+81|MBA Entrance Exams|GMAT|Aptitude|Solve for x: 3x + 5 = 20.
+82|MBA Entrance Exams|GMAT|Aptitude|What is the simple interest on ₹1200 at 5% per annum for 2 years?
+83|MBA Entrance Exams|GMAT|Aptitude|What is the least common multiple (LCM) of 12, 18, and 30?
+84|MBA Entrance Exams|GMAT|Aptitude|A man sells an article at a loss of 10%. If the selling price is ₹450, what was the cost price?
+85|MBA Entrance Exams|GMAT|Aptitude|The average of five numbers is 46. What is the sum of the numbers?
+86|MBA Entrance Exams|GMAT|Personality|What are your strengths and how do they help in a team?
+87|MBA Entrance Exams|GMAT|Personality|Describe your ideal work environment and why.
+88|MBA Entrance Exams|GMAT|Personality|How do you prioritize tasks when you're under pressure?
+89|MBA Entrance Exams|GMAT|Personality|Can you tell us about a time you resolved a team conflict?
+90|MBA Entrance Exams|GMAT|Personality|How do you balance personal and professional life?
+91|MBA Entrance Exams|GMAT|Technical|Describe the OSI model and its seven layers.
+92|MBA Entrance Exams|GMAT|Technical|How does a bubble sort algorithm work?
+93|MBA Entrance Exams|GMAT|Technical|What is SQL JOIN and what are its types?
+94|MBA Entrance Exams|GMAT|Technical|What is a pointer in C, and how is it used?
+95|MBA Entrance Exams|GMAT|Technical|What are binary trees and how are they used in computer science?
+96|MBA Entrance Exams|GMAT|Subject-Specific|What is SWOT analysis and how is it used in strategic planning?
+97|MBA Entrance Exams|GMAT|Subject-Specific|Explain the Law of Diminishing Marginal Utility with an example.
+98|MBA Entrance Exams|GMAT|Subject-Specific|Describe Maslow’s Hierarchy of Needs and its relevance in HRM.
+99|MBA Entrance Exams|GMAT|Subject-Specific|Describe Porter's Five Forces model.
+100|MBA Entrance Exams|GMAT|Subject-Specific|Define elasticity of demand and give a real-life example.
+101|MBA Entrance Exams|MAT|Aptitude|Find the compound interest on ₹1000 at 10% p.a. for 2 years, compounded annually.
+102|MBA Entrance Exams|MAT|Aptitude|If a pipe fills a tank in 4 hours and another empties it in 6 hours, how long will it take to fill the tank together?
+103|MBA Entrance Exams|MAT|Aptitude|If the perimeter of a rectangle is 60 cm and its length is 20 cm, what is its width?
+104|MBA Entrance Exams|MAT|Aptitude|What is the probability of getting a head when tossing a fair coin?
+105|MBA Entrance Exams|MAT|Aptitude|In how many ways can the letters of the word 'MATH' be arranged?
+106|MBA Entrance Exams|MAT|Personality|Describe a failure that taught you a valuable lesson.
+107|MBA Entrance Exams|MAT|Personality|What qualities do you think a good leader must have?
+108|MBA Entrance Exams|MAT|Personality|How do you adapt to changes in the workplace?
+109|MBA Entrance Exams|MAT|Personality|Describe a challenge you faced and how you overcame it.
+110|MBA Entrance Exams|MAT|Personality|Give an example of a situation where you took initiative.
+111|MBA Entrance Exams|MAT|Technical|Explain the concept of recursion with an example.
+112|MBA Entrance Exams|MAT|Technical|What is the difference between an abstract class and an interface in Java?
+113|MBA Entrance Exams|MAT|Technical|What is the difference between stack and queue?
+114|MBA Entrance Exams|MAT|Technical|Explain polymorphism in object-oriented programming.
+115|MBA Entrance Exams|MAT|Technical|Write a Python function to check if a number is prime.
+116|MBA Entrance Exams|MAT|Subject-Specific|What is the difference between nominal and real GDP?
+117|MBA Entrance Exams|MAT|Subject-Specific|What are the major functions of financial management?
+118|MBA Entrance Exams|MAT|Subject-Specific|What is Six Sigma and how is it applied in business processes?
+119|MBA Entrance Exams|MAT|Subject-Specific|In economics, explain the concept of demand and supply with a graph.
+120|MBA Entrance Exams|MAT|Subject-Specific|How does inflation impact the purchasing power of money?
+121|Engineering & Science|JEE|Aptitude|If a pipe fills a tank in 4 hours and another empties it in 6 hours, how long will it take to fill the tank together?
+122|Engineering & Science|JEE|Aptitude|If the perimeter of a rectangle is 60 cm and its length is 20 cm, what is its width?
+123|Engineering & Science|JEE|Aptitude|A man sells an article at a loss of 10%. If the selling price is ₹450, what was the cost price?
+124|Engineering & Science|JEE|Aptitude|Find the compound interest on ₹1000 at 10% p.a. for 2 years, compounded annually.
+125|Engineering & Science|JEE|Aptitude|What is the probability of getting a head when tossing a fair coin?
+126|Engineering & Science|JEE|Personality|Describe a failure that taught you a valuable lesson.
+127|Engineering & Science|JEE|Personality|How do you balance personal and professional life?
+128|Engineering & Science|JEE|Personality|What qualities do you think a good leader must have?
+129|Engineering & Science|JEE|Personality|Describe your ideal work environment and why.
+130|Engineering & Science|JEE|Personality|How do you adapt to changes in the workplace?
+131|Engineering & Science|JEE|Technical|Explain polymorphism in object-oriented programming.
+132|Engineering & Science|JEE|Technical|What is the difference between an abstract class and an interface in Java?
+133|Engineering & Science|JEE|Technical|Describe the OSI model and its seven layers.
+134|Engineering & Science|JEE|Technical|How does a bubble sort algorithm work?
+135|Engineering & Science|JEE|Technical|What is the difference between stack and queue?
+136|Engineering & Science|JEE|Subject-Specific|Explain the Law of Diminishing Marginal Utility with an example.
+137|Engineering & Science|JEE|Subject-Specific|Describe Maslow’s Hierarchy of Needs and its relevance in HRM.
+138|Engineering & Science|JEE|Subject-Specific|What are the major functions of financial management?
+139|Engineering & Science|JEE|Subject-Specific|What is the difference between nominal and real GDP?
+140|Engineering & Science|JEE|Subject-Specific|What is SWOT analysis and how is it used in strategic planning?
+141|Engineering & Science|GATE|Aptitude|What is the simple interest on ₹1200 at 5% per annum for 2 years?
+142|Engineering & Science|GATE|Aptitude|What is the least common multiple (LCM) of 12, 18, and 30?
+143|Engineering & Science|GATE|Aptitude|Solve for x: 3x + 5 = 20.
+144|Engineering & Science|GATE|Aptitude|In how many ways can the letters of the word 'MATH' be arranged?
+145|Engineering & Science|GATE|Aptitude|The average of five numbers is 46. What is the sum of the numbers?
+146|Engineering & Science|GATE|Personality|How do you prioritize tasks when you're under pressure?
+147|Engineering & Science|GATE|Personality|What are your strengths and how do they help in a team?
+148|Engineering & Science|GATE|Personality|Can you tell us about a time you resolved a team conflict?
+149|Engineering & Science|GATE|Personality|Give an example of a situation where you took initiative.
+150|Engineering & Science|GATE|Personality|Describe a challenge you faced and how you overcame it.
+151|Engineering & Science|GATE|Technical|What are binary trees and how are they used in computer science?
+152|Engineering & Science|GATE|Technical|What is SQL JOIN and what are its types?
+153|Engineering & Science|GATE|Technical|What is a pointer in C, and how is it used?
+154|Engineering & Science|GATE|Technical|Explain the concept of recursion with an example.
+155|Engineering & Science|GATE|Technical|Write a Python function to check if a number is prime.
+156|Engineering & Science|GATE|Subject-Specific|How does inflation impact the purchasing power of money?
+157|Engineering & Science|GATE|Subject-Specific|In economics, explain the concept of demand and supply with a graph.
+158|Engineering & Science|GATE|Subject-Specific|Define elasticity of demand and give a real-life example.
+159|Engineering & Science|GATE|Subject-Specific|Describe Porter's Five Forces model.
+160|Engineering & Science|GATE|Subject-Specific|What is Six Sigma and how is it applied in business processes?
+161|Government/Bank/SSC Exams|Bank Exams|Aptitude|The average of five numbers is 46. What is the sum of the numbers?
+162|Government/Bank/SSC Exams|Bank Exams|Aptitude|If the perimeter of a rectangle is 60 cm and its length is 20 cm, what is its width?
+163|Government/Bank/SSC Exams|Bank Exams|Aptitude|Find the compound interest on ₹1000 at 10% p.a. for 2 years, compounded annually.
+164|Government/Bank/SSC Exams|Bank Exams|Aptitude|In how many ways can the letters of the word 'MATH' be arranged?
+165|Government/Bank/SSC Exams|Bank Exams|Aptitude|What is the probability of getting a head when tossing a fair coin?
+166|Government/Bank/SSC Exams|Bank Exams|Personality|Give an example of a situation where you took initiative.
+167|Government/Bank/SSC Exams|Bank Exams|Personality|What qualities do you think a good leader must have?
+168|Government/Bank/SSC Exams|Bank Exams|Personality|Describe a failure that taught you a valuable lesson.
+169|Government/Bank/SSC Exams|Bank Exams|Personality|Can you tell us about a time you resolved a team conflict?
+170|Government/Bank/SSC Exams|Bank Exams|Personality|How do you adapt to changes in the workplace?
+171|Government/Bank/SSC Exams|Bank Exams|Technical|Write a Python function to check if a number is prime.
+172|Government/Bank/SSC Exams|Bank Exams|Technical|What is SQL JOIN and what are its types?
+173|Government/Bank/SSC Exams|Bank Exams|Technical|What is the difference between an abstract class and an interface in Java?
+174|Government/Bank/SSC Exams|Bank Exams|Technical|How does a bubble sort algorithm work?
+175|Government/Bank/SSC Exams|Bank Exams|Technical|Explain polymorphism in object-oriented programming.
+176|Government/Bank/SSC Exams|Bank Exams|Subject-Specific|Define elasticity of demand and give a real-life example.
+177|Government/Bank/SSC Exams|Bank Exams|Subject-Specific|What is Six Sigma and how is it applied in business processes?
+178|Government/Bank/SSC Exams|Bank Exams|Subject-Specific|What is SWOT analysis and how is it used in strategic planning?
+179|Government/Bank/SSC Exams|Bank Exams|Subject-Specific|What are the major functions of financial management?
+180|Government/Bank/SSC Exams|Bank Exams|Subject-Specific|In economics, explain the concept of demand and supply with a graph.
+181|Government/Bank/SSC Exams|SSC-CGLE|Aptitude|What is the least common multiple (LCM) of 12, 18, and 30?
+182|Government/Bank/SSC Exams|SSC-CGLE|Aptitude|Solve for x: 3x + 5 = 20.
+183|Government/Bank/SSC Exams|SSC-CGLE|Aptitude|What is the simple interest on ₹1200 at 5% per annum for 2 years?
+184|Government/Bank/SSC Exams|SSC-CGLE|Aptitude|If a pipe fills a tank in 4 hours and another empties it in 6 hours, how long will it take to fill the tank together?
+185|Government/Bank/SSC Exams|SSC-CGLE|Aptitude|A man sells an article at a loss of 10%. If the selling price is ₹450, what was the cost price?
+186|Government/Bank/SSC Exams|SSC-CGLE|Personality|How do you balance personal and professional life?
+187|Government/Bank/SSC Exams|SSC-CGLE|Personality|What are your strengths and how do they help in a team?
+188|Government/Bank/SSC Exams|SSC-CGLE|Personality|Describe your ideal work environment and why.
+189|Government/Bank/SSC Exams|SSC-CGLE|Personality|How do you prioritize tasks when you're under pressure?
+190|Government/Bank/SSC Exams|SSC-CGLE|Personality|Describe a challenge you faced and how you overcame it.
+191|Government/Bank/SSC Exams|SSC-CGLE|Technical|What is a pointer in C, and how is it used?
+192|Government/Bank/SSC Exams|SSC-CGLE|Technical|Describe the OSI model and its seven layers.
+193|Government/Bank/SSC Exams|SSC-CGLE|Technical|What is the difference between stack and queue?
+194|Government/Bank/SSC Exams|SSC-CGLE|Technical|What are binary trees and how are they used in computer science?
+195|Government/Bank/SSC Exams|SSC-CGLE|Technical|Explain the concept of recursion with an example.
+196|Government/Bank/SSC Exams|SSC-CGLE|Subject-Specific|Describe Maslow’s Hierarchy of Needs and its relevance in HRM.
+197|Government/Bank/SSC Exams|SSC-CGLE|Subject-Specific|How does inflation impact the purchasing power of money?
+198|Government/Bank/SSC Exams|SSC-CGLE|Subject-Specific|What is the difference between nominal and real GDP?
+199|Government/Bank/SSC Exams|SSC-CGLE|Subject-Specific|Explain the Law of Diminishing Marginal Utility with an example.
+200|Government/Bank/SSC Exams|SSC-CGLE|Subject-Specific|Describe Porter's Five Forces model.
+201|Government/Bank/SSC Exams|CRT (Recruitment Training)|Aptitude|What is the probability of getting a head when tossing a fair coin?
+202|Government/Bank/SSC Exams|CRT (Recruitment Training)|Aptitude|If the perimeter of a rectangle is 60 cm and its length is 20 cm, what is its width?
+203|Government/Bank/SSC Exams|CRT (Recruitment Training)|Aptitude|Find the compound interest on ₹1000 at 10% p.a. for 2 years, compounded annually.
+204|Government/Bank/SSC Exams|CRT (Recruitment Training)|Aptitude|What is the simple interest on ₹1200 at 5% per annum for 2 years?
+205|Government/Bank/SSC Exams|CRT (Recruitment Training)|Aptitude|Solve for x: 3x + 5 = 20.
+206|Government/Bank/SSC Exams|CRT (Recruitment Training)|Personality|Describe your ideal work environment and why.
+207|Government/Bank/SSC Exams|CRT (Recruitment Training)|Personality|How do you balance personal and professional life?
+208|Government/Bank/SSC Exams|CRT (Recruitment Training)|Personality|Describe a failure that taught you a valuable lesson.
+209|Government/Bank/SSC Exams|CRT (Recruitment Training)|Personality|Give an example of a situation where you took initiative.
+210|Government/Bank/SSC Exams|CRT (Recruitment Training)|Personality|Can you tell us about a time you resolved a team conflict?
+211|Government/Bank/SSC Exams|CRT (Recruitment Training)|Technical|What is the difference between an abstract class and an interface in Java?
+212|Government/Bank/SSC Exams|CRT (Recruitment Training)|Technical|Explain polymorphism in object-oriented programming.
+213|Government/Bank/SSC Exams|CRT (Recruitment Training)|Technical|How does a bubble sort algorithm work?
+214|Government/Bank/SSC Exams|CRT (Recruitment Training)|Technical|Write a Python function to check if a number is prime.
+215|Government/Bank/SSC Exams|CRT (Recruitment Training)|Technical|Explain the concept of recursion with an example.
+216|Government/Bank/SSC Exams|CRT (Recruitment Training)|Subject-Specific|Explain the Law of Diminishing Marginal Utility with an example.
+217|Government/Bank/SSC Exams|CRT (Recruitment Training)|Subject-Specific|How does inflation impact the purchasing power of money?
+218|Government/Bank/SSC Exams|CRT (Recruitment Training)|Subject-Specific|What are the major functions of financial management?
+219|Government/Bank/SSC Exams|CRT (Recruitment Training)|Subject-Specific|Describe Maslow’s Hierarchy of Needs and its relevance in HRM.
+220|Government/Bank/SSC Exams|CRT (Recruitment Training)|Subject-Specific|Describe Porter's Five Forces model.
+221|Law and IPM|CLAT|Aptitude|If a pipe fills a tank in 4 hours and another empties it in 6 hours, how long will it take to fill the tank together?
+222|Law and IPM|CLAT|Aptitude|What is the least common multiple (LCM) of 12, 18, and 30?
+223|Law and IPM|CLAT|Aptitude|In how many ways can the letters of the word 'MATH' be arranged?
+224|Law and IPM|CLAT|Aptitude|The average of five numbers is 46. What is the sum of the numbers?
+225|Law and IPM|CLAT|Aptitude|A man sells an article at a loss of 10%. If the selling price is ₹450, what was the cost price?
+226|Law and IPM|CLAT|Personality|What qualities do you think a good leader must have?
+227|Law and IPM|CLAT|Personality|Describe a challenge you faced and how you overcame it.
+228|Law and IPM|CLAT|Personality|What are your strengths and how do they help in a team?
+229|Law and IPM|CLAT|Personality|How do you prioritize tasks when you're under pressure?
+230|Law and IPM|CLAT|Personality|How do you adapt to changes in the workplace?
+231|Law and IPM|CLAT|Technical|Describe the OSI model and its seven layers.
+232|Law and IPM|CLAT|Technical|What is a pointer in C, and how is it used?
+233|Law and IPM|CLAT|Technical|What is the difference between stack and queue?
+234|Law and IPM|CLAT|Technical|What is SQL JOIN and what are its types?
+235|Law and IPM|CLAT|Technical|What are binary trees and how are they used in computer science?
+236|Law and IPM|CLAT|Subject-Specific|What is the difference between nominal and real GDP?
+237|Law and IPM|CLAT|Subject-Specific|What is Six Sigma and how is it applied in business processes?
+238|Law and IPM|CLAT|Subject-Specific|What is SWOT analysis and how is it used in strategic planning?
+239|Law and IPM|CLAT|Subject-Specific|Define elasticity of demand and give a real-life example.
+240|Law and IPM|CLAT|Subject-Specific|In economics, explain the concept of demand and supply with a graph.
+241|Law and IPM|IPM (IIM-IPM Exams)|Aptitude|What is the simple interest on ₹1200 at 5% per annum for 2 years?
+242|Law and IPM|IPM (IIM-IPM Exams)|Aptitude|If the perimeter of a rectangle is 60 cm and its length is 20 cm, what is its width?
+243|Law and IPM|IPM (IIM-IPM Exams)|Aptitude|Solve for x: 3x + 5 = 20.
+244|Law and IPM|IPM (IIM-IPM Exams)|Aptitude|If a pipe fills a tank in 4 hours and another empties it in 6 hours, how long will it take to fill the tank together?
+245|Law and IPM|IPM (IIM-IPM Exams)|Aptitude|Find the compound interest on ₹1000 at 10% p.a. for 2 years, compounded annually.
+246|Law and IPM|IPM (IIM-IPM Exams)|Personality|How do you prioritize tasks when you're under pressure?
+247|Law and IPM|IPM (IIM-IPM Exams)|Personality|Describe a challenge you faced and how you overcame it.
+248|Law and IPM|IPM (IIM-IPM Exams)|Personality|How do you adapt to changes in the workplace?
+249|Law and IPM|IPM (IIM-IPM Exams)|Personality|What qualities do you think a good leader must have?
+250|Law and IPM|IPM (IIM-IPM Exams)|Personality|Describe your ideal work environment and why.
+251|Law and IPM|IPM (IIM-IPM Exams)|Technical|Explain the concept of recursion with an example.
+252|Law and IPM|IPM (IIM-IPM Exams)|Technical|Write a Python function to check if a number is prime.
+253|Law and IPM|IPM (IIM-IPM Exams)|Technical|What is a pointer in C, and how is it used?
+254|Law and IPM|IPM (IIM-IPM Exams)|Technical|What are binary trees and how are they used in computer science?
+255|Law and IPM|IPM (IIM-IPM Exams)|Technical|What is the difference between an abstract class and an interface in Java?
+256|Law and IPM|IPM (IIM-IPM Exams)|Subject-Specific|Describe Maslow’s Hierarchy of Needs and its relevance in HRM.
+257|Law and IPM|IPM (IIM-IPM Exams)|Subject-Specific|What is the difference between nominal and real GDP?
+258|Law and IPM|IPM (IIM-IPM Exams)|Subject-Specific|What are the major functions of financial management?
+259|Law and IPM|IPM (IIM-IPM Exams)|Subject-Specific|What is Six Sigma and how is it applied in business processes?
+260|Law and IPM|IPM (IIM-IPM Exams)|Subject-Specific|Describe Porter's Five Forces model.
+261|Medical|NEET|Aptitude|The average of five numbers is 46. What is the sum of the numbers?
+262|Medical|NEET|Aptitude|What is the least common multiple (LCM) of 12, 18, and 30?
+263|Medical|NEET|Aptitude|A man sells an article at a loss of 10%. If the selling price is ₹450, what was the cost price?
+264|Medical|NEET|Aptitude|What is the probability of getting a head when tossing a fair coin?
+265|Medical|NEET|Aptitude|In how many ways can the letters of the word 'MATH' be arranged?
+266|Medical|NEET|Personality|Can you tell us about a time you resolved a team conflict?
+267|Medical|NEET|Personality|How do you balance personal and professional life?
+268|Medical|NEET|Personality|What are your strengths and how do they help in a team?
+269|Medical|NEET|Personality|Give an example of a situation where you took initiative.
+270|Medical|NEET|Personality|Describe a failure that taught you a valuable lesson.
+271|Medical|NEET|Technical|How does a bubble sort algorithm work?
+272|Medical|NEET|Technical|Explain polymorphism in object-oriented programming.
+273|Medical|NEET|Technical|What is the difference between stack and queue?
+274|Medical|NEET|Technical|What is SQL JOIN and what are its types?
+275|Medical|NEET|Technical|Describe the OSI model and its seven layers.
+276|Medical|NEET|Subject-Specific|In economics, explain the concept of demand and supply with a graph.
+277|Medical|NEET|Subject-Specific|Explain the Law of Diminishing Marginal Utility with an example.
+278|Medical|NEET|Subject-Specific|Define elasticity of demand and give a real-life example.
+279|Medical|NEET|Subject-Specific|How does inflation impact the purchasing power of money?
+280|Medical|NEET|Subject-Specific|What is SWOT analysis and how is it used in strategic planning?
+281|International Exams|GRE|Aptitude|If a pipe fills a tank in 4 hours and another empties it in 6 hours, how long will it take to fill the tank together?
+282|International Exams|GRE|Aptitude|Find the compound interest on ₹1000 at 10% p.a. for 2 years, compounded annually.
+283|International Exams|GRE|Aptitude|What is the least common multiple (LCM) of 12, 18, and 30?
+284|International Exams|GRE|Aptitude|What is the probability of getting a head when tossing a fair coin?
+285|International Exams|GRE|Aptitude|Solve for x: 3x + 5 = 20.
+286|International Exams|GRE|Personality|How do you balance personal and professional life?
+287|International Exams|GRE|Personality|Can you tell us about a time you resolved a team conflict?
+288|International Exams|GRE|Personality|Describe a challenge you faced and how you overcame it.
+289|International Exams|GRE|Personality|How do you adapt to changes in the workplace?
+290|International Exams|GRE|Personality|What are your strengths and how do they help in a team?
+291|International Exams|GRE|Technical|Describe the OSI model and its seven layers.
+292|International Exams|GRE|Technical|How does a bubble sort algorithm work?
+293|International Exams|GRE|Technical|What is the difference between stack and queue?
+294|International Exams|GRE|Technical|Write a Python function to check if a number is prime.
+295|International Exams|GRE|Technical|What are binary trees and how are they used in computer science?
+296|International Exams|GRE|Subject-Specific|What is SWOT analysis and how is it used in strategic planning?
+297|International Exams|GRE|Subject-Specific|Describe Maslow’s Hierarchy of Needs and its relevance in HRM.
+298|International Exams|GRE|Subject-Specific|Describe Porter's Five Forces model.
+299|International Exams|GRE|Subject-Specific|What is the difference between nominal and real GDP?
+300|International Exams|GRE|Subject-Specific|In economics, explain the concept of demand and supply with a graph.
+301|International Exams|GMAT|Aptitude|In how many ways can the letters of the word 'MATH' be arranged?
+302|International Exams|GMAT|Aptitude|If the perimeter of a rectangle is 60 cm and its length is 20 cm, what is its width?
+303|International Exams|GMAT|Aptitude|A man sells an article at a loss of 10%. If the selling price is ₹450, what was the cost price?
+304|International Exams|GMAT|Aptitude|What is the simple interest on ₹1200 at 5% per annum for 2 years?
+305|International Exams|GMAT|Aptitude|The average of five numbers is 46. What is the sum of the numbers?
+306|International Exams|GMAT|Personality|Describe your ideal work environment and why.
+307|International Exams|GMAT|Personality|What qualities do you think a good leader must have?
+308|International Exams|GMAT|Personality|Describe a failure that taught you a valuable lesson.
+309|International Exams|GMAT|Personality|How do you prioritize tasks when you're under pressure?
+310|International Exams|GMAT|Personality|Give an example of a situation where you took initiative.
+311|International Exams|GMAT|Technical|What is the difference between an abstract class and an interface in Java?
+312|International Exams|GMAT|Technical|Explain polymorphism in object-oriented programming.
+313|International Exams|GMAT|Technical|What is SQL JOIN and what are its types?
+314|International Exams|GMAT|Technical|Explain the concept of recursion with an example.
+315|International Exams|GMAT|Technical|What is a pointer in C, and how is it used?
+316|International Exams|GMAT|Subject-Specific|How does inflation impact the purchasing power of money?
+317|International Exams|GMAT|Subject-Specific|Define elasticity of demand and give a real-life example.
+318|International Exams|GMAT|Subject-Specific|What is Six Sigma and how is it applied in business processes?
+319|International Exams|GMAT|Subject-Specific|What are the major functions of financial management?
+320|International Exams|GMAT|Subject-Specific|Explain the Law of Diminishing Marginal Utility with an example.
+321|Foundation/School Level|IIT Foundation|Aptitude|What is the simple interest on ₹1200 at 5% per annum for 2 years?
+322|Foundation/School Level|IIT Foundation|Aptitude|What is the probability of getting a head when tossing a fair coin?
+323|Foundation/School Level|IIT Foundation|Aptitude|If a pipe fills a tank in 4 hours and another empties it in 6 hours, how long will it take to fill the tank together?
+324|Foundation/School Level|IIT Foundation|Aptitude|What is the least common multiple (LCM) of 12, 18, and 30?
+325|Foundation/School Level|IIT Foundation|Aptitude|If the perimeter of a rectangle is 60 cm and its length is 20 cm, what is its width?
+326|Foundation/School Level|IIT Foundation|Personality|How do you balance personal and professional life?
+327|Foundation/School Level|IIT Foundation|Personality|Can you tell us about a time you resolved a team conflict?
+328|Foundation/School Level|IIT Foundation|Personality|What qualities do you think a good leader must have?
+329|Foundation/School Level|IIT Foundation|Personality|How do you prioritize tasks when you're under pressure?
+330|Foundation/School Level|IIT Foundation|Personality|How do you adapt to changes in the workplace?
+331|Foundation/School Level|IIT Foundation|Technical|What is the difference between stack and queue?
+332|Foundation/School Level|IIT Foundation|Technical|Write a Python function to check if a number is prime.
+333|Foundation/School Level|IIT Foundation|Technical|What is SQL JOIN and what are its types?
+334|Foundation/School Level|IIT Foundation|Technical|Explain polymorphism in object-oriented programming.
+335|Foundation/School Level|IIT Foundation|Technical|What is a pointer in C, and how is it used?
+336|Foundation/School Level|IIT Foundation|Subject-Specific|Define elasticity of demand and give a real-life example.
+337|Foundation/School Level|IIT Foundation|Subject-Specific|What are the major functions of financial management?
+338|Foundation/School Level|IIT Foundation|Subject-Specific|Explain the Law of Diminishing Marginal Utility with an example.
+339|Foundation/School Level|IIT Foundation|Subject-Specific|Describe Maslow’s Hierarchy of Needs and its relevance in HRM.
+340|Foundation/School Level|IIT Foundation|Subject-Specific|What is Six Sigma and how is it applied in business processes?
+341|Foundation/School Level|IIT Foundation (E-Learning Course)|Aptitude|In how many ways can the letters of the word 'MATH' be arranged?
+342|Foundation/School Level|IIT Foundation (E-Learning Course)|Aptitude|The average of five numbers is 46. What is the sum of the numbers?
+343|Foundation/School Level|IIT Foundation (E-Learning Course)|Aptitude|A man sells an article at a loss of 10%. If the selling price is ₹450, what was the cost price?
+344|Foundation/School Level|IIT Foundation (E-Learning Course)|Aptitude|Find the compound interest on ₹1000 at 10% p.a. for 2 years, compounded annually.
+345|Foundation/School Level|IIT Foundation (E-Learning Course)|Aptitude|Solve for x: 3x + 5 = 20.
+346|Foundation/School Level|IIT Foundation (E-Learning Course)|Personality|Give an example of a situation where you took initiative.
+347|Foundation/School Level|IIT Foundation (E-Learning Course)|Personality|Describe a challenge you faced and how you overcame it.
+348|Foundation/School Level|IIT Foundation (E-Learning Course)|Personality|Describe your ideal work environment and why.
+349|Foundation/School Level|IIT Foundation (E-Learning Course)|Personality|What are your strengths and how do they help in a team?
+350|Foundation/School Level|IIT Foundation (E-Learning Course)|Personality|Describe a failure that taught you a valuable lesson.
+351|Foundation/School Level|IIT Foundation (E-Learning Course)|Technical|How does a bubble sort algorithm work?
+352|Foundation/School Level|IIT Foundation (E-Learning Course)|Technical|What are binary trees and how are they used in computer science?
+353|Foundation/School Level|IIT Foundation (E-Learning Course)|Technical|Explain the concept of recursion with an example.
+354|Foundation/School Level|IIT Foundation (E-Learning Course)|Technical|Describe the OSI model and its seven layers.
+355|Foundation/School Level|IIT Foundation (E-Learning Course)|Technical|What is the difference between an abstract class and an interface in Java?
+356|Foundation/School Level|IIT Foundation (E-Learning Course)|Subject-Specific|What is SWOT analysis and how is it used in strategic planning?
+357|Foundation/School Level|IIT Foundation (E-Learning Course)|Subject-Specific|What is the difference between nominal and real GDP?
+358|Foundation/School Level|IIT Foundation (E-Learning Course)|Subject-Specific|In economics, explain the concept of demand and supply with a graph.
+359|Foundation/School Level|IIT Foundation (E-Learning Course)|Subject-Specific|Describe Porter's Five Forces model.
+360|Foundation/School Level|IIT Foundation (E-Learning Course)|Subject-Specific|How does inflation impact the purchasing power of money?
