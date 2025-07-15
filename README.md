@@ -61,3 +61,4 @@ TIME AI Powered Coach is your personal AI-powered exam and interview coach. It h
 
 ## License
 This project is for educational and demonstration purposes.
+# TIME-AI-Coach
